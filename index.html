@@ -279,6 +279,25 @@ table.t td.n, table.t th.n { text-align: end; font-variant-numeric: tabular-nums
 .state { font-size: 13px; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
 .state i { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); }
 .state.open i { background: var(--warn); } .state.done i { background: var(--good); } .state.deleted i { background: var(--bad); }
+/* ------------------------------------------------------------------ بوت الإعلانات */
+.progress { height: 10px; background: var(--raised); border-radius: 6px; overflow: hidden; direction: rtl; }
+.progress > i { display: block; height: 100%; background: var(--accent); border-radius: 6px; transition: width var(--slow) var(--ease-out); }
+.counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 700px) { .counts { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.counts > div { background: var(--raised); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; min-width: 0; }
+.counts b { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.counts span { color: var(--muted); font-size: 12px; line-height: 1.3; }
+.counts .good b { color: var(--good); } .counts .bad b { color: var(--bad); }
+.card-title-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.kvs { display: grid; gap: 6px; }
+@media (min-width: 700px) { .kvs { grid-template-columns: 1fr 1fr; column-gap: 24px; } }
+.kv { display: flex; gap: 12px; justify-content: space-between; font-size: 14px; border-bottom: 1px dashed var(--border); padding: 4px 0; min-width: 0; }
+.kv span { color: var(--muted); flex: none; } .kv b { font-weight: 500; text-align: end; overflow-wrap: anywhere; }
+.hist { flex: 1; min-width: 0; display: grid; gap: 2px; padding: 8px 0; }
+.hist .t { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: right; }
+.hist-sub { display: flex; gap: 4px 12px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+ul.plain { margin: 0; padding-inline-start: 18px; font-size: 14px; color: var(--muted); display: grid; gap: 4px; }
+select.input { appearance: none; background-image: none; }
 .review { padding: 12px 16px; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; }
 .review:last-child { border-bottom: 0; }
 .review .avatar { width: 36px; height: 36px; }
@@ -313,7 +332,7 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, .64); }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getFirestore, doc, collection, getDoc, getDocs, setDoc, addDoc, onSnapshot, query, where, serverTimestamp, Timestamp, Bytes } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { getFirestore, doc, collection, getDoc, getDocs, setDoc, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, Bytes } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // نفس مشروع Firebase مال موقع الدفتر. هذي القيم مو سرية - الحماية بقواعد Firestore.
 const firebaseConfig = {
@@ -335,9 +354,13 @@ const PAGES = [
   { id: "customers", title: "الزبائن", icon: "users" },
   { id: "bot-main", title: "البوت الأساسي", group: "التحكم بالبوت", bot: "main", icon: "bot" },
   { id: "bot-tickets", title: "بوت التكت", group: "التحكم بالبوت", bot: "tickets", icon: "ticket" },
+  { id: "bot-broadcast", title: "بوت الإعلانات", group: "التحكم بالبوت", bot: "broadcast", icon: "megaphone", only: "lucifer" },
   { id: "stats-tickets", title: "التذاكر", group: "الإحصائيات", icon: "chart" },
   { id: "stats-reviews", title: "التقييمات", group: "الإحصائيات", icon: "star" },
 ];
+const BOT_KEYS = ["main", "tickets", "broadcast"];
+const BOT_LABELS = { main: "البوت الأساسي", tickets: "بوت التكت", broadcast: "بوت الإعلانات" };
+const pageOk = (p, server) => !p.only || p.only === server;
 const RANGES = [{ id: "7", label: "7 أيام", days: 7 }, { id: "30", label: "30 يوم", days: 30 }, { id: "90", label: "90 يوم", days: 90 }, { id: "all", label: "الكل", days: 0 }];
 const TZ = "Asia/Baghdad";
 const MAX_IMAGE = 900000;
@@ -390,6 +413,9 @@ const ICONS = {
   table: "M4 5h16v14H4zM4 10h16M4 15h16M10 5v14",
   sort: "M8 9l4-4 4 4M8 15l4 4 4-4",
   inbox: "M4 13l3-8h10l3 8v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 13h5l1 2h4l1-2h5",
+  send: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z",
+  stop: "M6 6h12v12H6z",
+  megaphone: "M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1zM17 9a3.5 3.5 0 0 1 0 6M19.5 6a7.5 7.5 0 0 1 0 12",
 };
 const icon = (name, cls = "") => s("svg", { class: "ic " + cls, viewBox: "0 0 24 24", "aria-hidden": "true" }, s("path", { d: ICONS[name] }));
 const sk = (w, hgt, style = "") => h("span", { class: "sk", style: `width:${w};height:${hgt};${style}` });
@@ -442,7 +468,7 @@ let unsubs = [];
 function S() {
   return (data[store.server] ||= {
     guild: null, customers: null, customersInfo: null, schema: {}, settings: {}, status: {}, draft: {}, base: {},
-    tickets: {}, openTickets: null, reviews: {}, reviewsInfo: null, error: null, images: {},
+    tickets: {}, openTickets: null, reviews: {}, reviewsInfo: null, error: null, images: {}, bcInfo: undefined, bcHistory: undefined,
   });
 }
 const root = () => doc(db, "dash", store.server);
@@ -454,7 +480,8 @@ function readRoute() {
   let saved = {};
   try { saved = JSON.parse(localStorage.getItem("panel.route") || "{}"); } catch {}
   store.server = SERVERS[srv] ? srv : SERVERS[saved.server] ? saved.server : "lucifer";
-  store.page = PAGES.some((p) => p.id === page) ? page : PAGES.some((p) => p.id === saved.page) ? saved.page : "customers";
+  const usable = (id) => PAGES.some((p) => p.id === id && pageOk(p, store.server));
+  store.page = usable(page) ? page : usable(saved.page) ? saved.page : "customers";
 }
 function go(server, page) {
   const next = `#/${server}/${page}`;
@@ -470,7 +497,11 @@ function watch() {
   const guard = (fn) => (snap) => { if (store.server === srv) fn(snap); };
   const fail = (e) => { if (store.server !== srv) return; st.error = explainError(e); render(); };
   unsubs.push(onSnapshot(sub("info", "guild"), guard((d) => { st.guild = d.exists() ? d.data() : {}; render(); }), fail));
-  for (const bot of ["main", "tickets"]) {
+  if (srv === "lucifer") {
+    unsubs.push(onSnapshot(sub("info", "broadcast"), guard((d) => { st.bcInfo = d.exists() ? d.data() : false; if (store.page === "bot-broadcast") render(); }), fail));
+    unsubs.push(onSnapshot(query(subcol("broadcasts"), orderBy("created_at", "desc"), limit(150)), guard((q) => { st.bcHistory = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "bot-broadcast") render(); }), fail));
+  }
+  for (const bot of BOT_KEYS) {
     unsubs.push(onSnapshot(sub("schema", bot), guard((d) => { st.schema[bot] = d.exists() ? d.data() : false; rebase(bot); render(); }), fail));
     unsubs.push(onSnapshot(sub("settings", bot), guard((d) => { st.settings[bot] = d.exists() ? d.data() : {}; rebase(bot); render(); }), fail));
     unsubs.push(onSnapshot(sub("status", bot), guard((d) => {
@@ -630,7 +661,7 @@ function drawTopbar(page) {
 }
 function switchServer(id, ev) {
   if (id === store.server) return;
-  const bots = ["main", "tickets"].filter(isDirty);
+  const bots = BOT_KEYS.filter(isDirty);
   if (bots.length && !confirm("عندك تعديلات ما محفوظة بهذا السيرفر. تتركها وتبدل؟")) return;
   if (bots.length) bots.forEach((b) => { S().draft[b] = clone(S().base[b]); });
   const apply = () => go(id, store.page);
@@ -644,13 +675,13 @@ function switchServer(id, ev) {
 function botLine(bot) {
   const stt = S().status[bot]; const hb = stt && toDate(stt.heartbeat);
   const on = hb && Date.now() - hb.getTime() < 25 * 60000;
-  const label = bot === "main" ? "البوت الأساسي" : "بوت التكت";
+  const label = BOT_LABELS[bot];
   const text = stt === undefined ? "..." : stt === false ? "بعده ما اتصل" : on ? "شغال" : `ما ظاهر ${ago(hb)}`;
   return h("div", { class: "bot-state" }, h("span", { class: "dot " + (stt === undefined ? "" : on ? "on" : "off") }), h("span", {}, h("b", {}, label), "، ", text));
 }
 function drawDrawer() {
   let lastGroup = null; const links = [];
-  for (const p of PAGES) {
+  for (const p of PAGES.filter((x) => pageOk(x, store.server))) {
     if (p.group && p.group !== lastGroup) links.push(h("div", { class: "nav-group" }, p.group));
     lastGroup = p.group || null;
     links.push(h("a", { href: `#/${store.server}/${p.id}`, "aria-current": p.id === store.page ? "page" : null, onclick: (ev) => {
@@ -662,7 +693,7 @@ function drawDrawer() {
     h("div", { class: "brand" }, h("div", { class: "mark", "aria-hidden": "true" }, srv.name[0]),
       h("div", {}, h("div", { class: "name" }, srv.name), h("div", { class: "sub" }, g && g.member_count ? `${fmt(g.member_count)} عضو بالسيرفر` : srv.full))),
     h("nav", { class: "nav" }, links),
-    h("div", { class: "foot" }, botLine("main"), botLine("tickets"),
+    h("div", { class: "foot" }, botLine("main"), botLine("tickets"), store.server === "lucifer" ? botLine("broadcast") : null,
       h("button", { class: "btn ghost", style: "justify-content:flex-start;margin-top:8px", onclick: () => signOut(auth) }, icon("logout"), "تسجيل خروج")));
 }
 function leaveGuard(nextPage) {
@@ -675,6 +706,7 @@ function drawMain(page) {
   const st = S(); const body = [];
   if (st.error) body.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أجيب البيانات"), st.error)));
   if (page.id === "customers") body.push(drawCustomers());
+  else if (page.id === "bot-broadcast") body.push(drawBroadcast());
   else if (page.bot) body.push(drawControl(page.bot));
   else if (page.id === "stats-tickets") body.push(drawTicketStats());
   else body.push(drawReviewStats());
@@ -763,7 +795,7 @@ function drawControl(bot) {
   const st = S(); const schema = st.schema[bot];
   if (schema === undefined || st.settings[bot] === undefined) return [0, 1, 2, 3, 4].map(() => h("div", { class: "card", style: "padding:0 16px;min-height:60px;display:flex;align-items:center", "aria-busy": "true" }, sk("38%", "16px")));
   if (schema === false) return emptyState("bot", "البوت بعده ما اتصل بالموقع",
-    `ارفع ملف panel.py وملف main.py الجديد لفولدر ${bot === "main" ? "البوت الأساسي" : "بوت التكت"} مال ${SERVERS[store.server].name} وسوي Restart. أول ما يشتغل تطلع إعداداته هنا.`);
+    `ارفع ملف panel.py وملف main.py الجديد لفولدر ${bot === "broadcast" ? "Broadcast bot" : BOT_LABELS[bot] + " مال " + SERVERS[store.server].name}${bot === "broadcast" ? " مع ملف service-account.json" : ""} وسوي Restart. أول ما يشتغل تطلع إعداداته هنا.`);
   const draft = st.draft[bot]; const stt = st.status[bot]; const hb = stt && toDate(stt.heartbeat);
   const on = hb && Date.now() - hb.getTime() < 25 * 60000;
   const problems = stt ? [...Object.values(stt.errors || {}), ...Object.values(stt.notes || {})] : [];
@@ -802,6 +834,7 @@ function drawField(bot, f, draft, path, top) {
   if (f.type === "bool") return h("div", { class: "field" }, h("div", { class: "inline" }, h("span", { class: "f-label", id: "l-" + fk }, f.label),
     h("button", { class: "switch", role: "switch", type: "button", "aria-checked": String(!!value), "aria-labelledby": "l-" + fk, "data-fk": fk, onclick: () => set(!value, true) })), help);
   if (f.type === "text") return h("div", { class: "field" }, head(), h("input", { class: "input", dir: "auto", value: value ?? "", "data-fk": fk, "aria-labelledby": "l-" + fk, oninput: (ev) => set(ev.target.value) }), help);
+  if (f.type === "secret") return h("div", { class: "field" }, head(), h("input", { class: "input ltr", type: "password", autocomplete: "off", spellcheck: "false", placeholder: "الصق التوكن هنا", value: value ?? "", "data-fk": fk, "aria-labelledby": "l-" + fk, oninput: (ev) => set(ev.target.value) }), help);
   if (f.type === "number") return h("div", { class: "field" }, head(), h("input", { class: "input ltr", type: "number", inputmode: "decimal", value: value ?? 0, "data-fk": fk, "aria-labelledby": "l-" + fk,
     oninput: (ev) => set(ev.target.value === "" ? 0 : Number(ev.target.value)) }), help);
   if (f.type === "longtext") {
@@ -1120,13 +1153,209 @@ function drawReviewStats() {
           h("div", { style: "min-width:0" }, h("div", { class: "meta" }, h("b", { dir: "auto" }, r.display_name || r.username), h("span", { class: "num" }, fmtDateTime(r.at))),
             h("div", { class: "txt", dir: "auto" }, plain(r.text) || (r.images ? "صورة بدون نص" : "—")))))) : h("div", { class: "empty" }, h("p", {}, "ماكو تقييمات بهالفترة."))))];
 }
+// ------------------------------------------------------------------ بوت الإعلانات
+const BC_STATE = { running: ["open", "قاعد ينرسل"], waiting: ["open", "ينتظر"], done: ["done", "خلص"], stopped: ["deleted", "انوقف"], rejected: ["deleted", "انرفض"] };
+const BC_TABS = [{ id: "overview", label: "نظرة عامة" }, { id: "send", label: "إرسال إعلان" }, { id: "history", label: "السجل" }, { id: "bots", label: "البوتات" }, { id: "settings", label: "الإعدادات" }];
+const bcUi = () => (ui.bc ||= { tab: "overview", guild: "", target: "all", role: "", text: "", imageId: null, imageUrl: null, preview: false, shown: 20, wait: null, busy: false });
+function bcOnline() { const stt = S().status.broadcast; const hb = stt && toDate(stt.heartbeat); return !!(hb && Date.now() - hb.getTime() < 25 * 60000); }
+function bcJobs() { return (S().bcHistory || []).filter((j) => j.status !== "rejected"); }
+async function bcAction(name, extra, done) {
+  try { await addDoc(subcol("actions"), { bot: "broadcast", name, at: serverTimestamp(), by: store.user.email, ...extra }); if (done) toast(done); return true; }
+  catch (e) { toast(explainError(e), 4500); return false; }
+}
+function drawBroadcast() {
+  const st = S(); const u = bcUi();
+  const tabs = h("div", { class: "chips", role: "tablist", "aria-label": "أقسام بوت الإعلانات" }, BC_TABS.map((t) => h("button", { class: "chip", role: "tab", "aria-selected": String(u.tab === t.id), "aria-pressed": String(u.tab === t.id), onclick: () => { u.tab = t.id; render(); } }, t.label)));
+  requestAnimationFrame(() => { const on = tabs.querySelector('[aria-selected="true"]'); if (on && tabs.isConnected) tabs.scrollLeft += on.getBoundingClientRect().left < tabs.getBoundingClientRect().left || on.getBoundingClientRect().right > tabs.getBoundingClientRect().right ? on.getBoundingClientRect().left - tabs.getBoundingClientRect().left - 16 : 0; });
+  if (u.tab === "settings") return [tabs, drawControl("broadcast")];
+  if (st.bcInfo === undefined || st.bcHistory === undefined) return [tabs, statsSkeleton().slice(1)];
+  if (st.bcInfo === false && st.schema.broadcast === false) return [tabs, emptyState("bot", "بوت الإعلانات بعده ما اتصل بالموقع", "ارفع ملفات main.py و panel.py و service-account.json لمجلد Broadcast bot وسوي Restart. أول ما يشتغل تطلع هنا البوتات والإحصائيات.")];
+  const offline = !bcOnline() ? h("div", { class: "notice bad", role: "status" }, icon("alert"), h("div", {}, h("b", {}, "البوت مو شغال هسه"), "أي طلب ترسله ينتظر البوت، وإذا ما اشتغل خلال 10 دقايق ينلغي.")) : null;
+  const body = u.tab === "send" ? bcSendForm() : u.tab === "history" ? bcHistoryList() : u.tab === "bots" ? bcBots() : bcOverview();
+  return [tabs, offline, body];
+}
+function bcCounts(j) {
+  const left = Math.max(0, (j.total || 0) - (j.done || 0));
+  const box = (v, l, c) => h("div", { class: c || "" }, h("b", { class: "num" }, fmt(v)), h("span", {}, l));
+  return h("div", { class: "counts" }, box(j.total, "المستهدفين"), box(j.sent, "وصلت", "good"), box(j.closed, "خاصهم مقفول"), box(j.skipped, "موقفين الإعلانات"), box(j.failed, "فشلت", j.failed ? "bad" : ""), box(left, "الباقي"));
+}
+function bcProgress(j) {
+  const pct = j.total ? Math.min(100, Math.round(((j.done || 0) / j.total) * 100)) : 0;
+  return h("div", { class: "progress", role: "progressbar", "aria-valuemin": "0", "aria-valuemax": "100", "aria-valuenow": String(pct), "aria-label": "نسبة الإرسال" }, h("i", { style: `width:${pct}%` }));
+}
+function bcBotsTable(j) {
+  const bots = j.bots || [];
+  if (!bots.length) return null;
+  return h("div", { class: "table-wrap" }, h("table", { class: "t" }, h("thead", {}, h("tr", {}, h("th", {}, "البوت"), h("th", { class: "n" }, "وصلت"), h("th", { class: "n" }, "مقفول"), h("th", { class: "n" }, "أخطاء"), h("th", {}, ""))),
+    h("tbody", {}, bots.map((b) => h("tr", {}, h("td", { dir: "auto" }, b.name || b.id), h("td", { class: "n num" }, fmt(b.sent)), h("td", { class: "n num" }, fmt(b.closed)), h("td", { class: "n num" }, fmt(b.failed)),
+      h("td", {}, h("span", { class: "state " + (b.dead ? "deleted" : "done"), title: b.dead ? "وكف بسبب حد ديسكورد" : "كمل عادي" }, h("i"), b.dead ? "وكف" : "")))))));
+}
+function bcRunningCard(j) {
+  const bots = (j.bots || []).filter((b) => !b.dead).length || 1; const left = Math.max(0, (j.total || 0) - (j.done || 0));
+  const eta = Math.ceil((left * ((j.delay || 3) + 0.5)) / bots / 60);
+  return h("section", { class: "card card-pad stack", style: "gap:12px" },
+    h("div", { class: "card-title-row" }, h("span", { class: "state open" }, h("i"), "قاعد ينرسل هسه"), h("span", { class: "muted" }, `${j.guild_name || ""} · ${j.target_label || ""}`)),
+    bcProgress(j), h("div", { class: "muted", style: "font-size:13px" }, `${fmt(j.done)} من ${fmt(j.total)} · باقي تقريباً ${eta} دقيقة · بدا ${ago(toDate(j.started_at))}`),
+    bcCounts(j), bcBotsTable(j),
+    h("div", {}, h("button", { class: "btn danger", type: "button", onclick: () => { if (confirm("توكف الإرسال؟ اللي وصلتهم يبقون، والباقين ما يوصلهم.")) bcAction("bc_stop", { guild_id: j.guild_id }, "انرسل طلب الإيقاف للبوت"); } }, icon("stop"), "إيقاف الإرسال")));
+}
+function bcOverview() {
+  const st = S(); const u = bcUi(); const info = st.bcInfo || {}; const jobs = bcJobs();
+  const running = jobs.filter((j) => j.status === "running");
+  const finished = jobs.filter((j) => j.status === "done" || j.status === "stopped");
+  const last = jobs[0];
+  const sum = (k) => finished.reduce((a, j) => a + (j[k] || 0), 0);
+  const reachable = finished.reduce((a, j) => a + Math.max(0, (j.total || 0) - (j.skipped || 0)), 0);
+  const optout = (info.guilds || []).reduce((a, g) => a + (g.optout || 0), 0);
+  const bots = info.bots || []; const ready = bots.filter((b) => b.ready).length;
+  const out = [];
+  const waiting = u.wait && !(st.bcHistory || []).some((j) => j.id === u.wait);
+  if (waiting) out.push(h("div", { class: "notice", role: "status" }, icon("refresh"), h("div", {}, h("b", {}, "انرسل الطلب، ننتظر البوت يستلمه"), "عادة ياخذ ثواني. أول ما يبدي يطلع هنا وين وصل.")));
+  const rejected = u.wait && (st.bcHistory || []).find((j) => j.id === u.wait && j.status === "rejected");
+  if (rejected) out.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "البوت رفض الطلب"), rejected.why || "")));
+  out.push(...running.map(bcRunningCard));
+  out.push(h("div", { class: "kpis" },
+    kpi(last ? ago(toDate(last.created_at)) : "ولا مرة", "آخر إعلان", "lead", last ? fmtDateTime(toDate(last.created_at)) : null),
+    kpi(fmt(jobs.length), "عدد الإعلانات", "", running.length ? `${running.length} قاعد ينرسل` : null),
+    kpi(fmt(sum("sent")), "رسالة وصلت", "good", `من ${fmt(sum("total"))} مستهدف`),
+    kpi(reachable ? Math.round((sum("sent") / reachable) * 100) + "%" : "—", "نسبة الوصول", "", `${fmt(sum("closed"))} خاصهم مقفول`),
+    kpi(fmt(optout), "موقفين الإعلانات", optout ? "warn" : ""),
+    kpi(`${ready}/${bots.length || 0}`, "البوتات الجاهزة", ready ? "good" : "bad")));
+  const dates = finished.map((j) => toDate(j.created_at)).filter(Boolean);
+  if (finished.length) {
+    const { list } = buckets("30", dates); const sent = list.map(() => 0); const count = list.map(() => 0);
+    for (const j of finished) { const i = place(list, toDate(j.created_at)); if (i >= 0) { sent[i] += j.sent || 0; count[i]++; } }
+    out.push(columnChart("bc", "الرسائل الواصلة آخر 30 يوم", list, [{ name: "رسائل وصلت", color: "var(--series-1)", values: sent }]));
+  }
+  if (last && last.status !== "running") out.push(h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "آخر إعلان")), h("div", { class: "card-pad" }, bcDetails(last))));
+  if (!jobs.length && !running.length) out.push(emptyState("megaphone", "ماكو إعلانات بعد", "أول إعلان ترسله من هنا أو بأمر -bc بديسكورد يطلع بالسجل بكل تفاصيله.", h("button", { class: "btn primary", type: "button", onclick: () => { bcUi().tab = "send"; render(); } }, icon("send"), "إرسال إعلان")));
+  return out;
+}
+function bcDetails(j) {
+  const created = toDate(j.created_at), started = toDate(j.started_at), finished = toDate(j.finished_at);
+  const row = (k, v) => (v == null || v === "" ? null : h("div", { class: "kv" }, h("span", {}, k), h("b", { dir: "auto" }, v)));
+  const pv = h("div", { class: "preview", dir: "auto" }); pv.innerHTML = j.text ? discordHtml(j.text) : "<i>بدون نص</i>";
+  return h("div", { class: "stack", style: "gap:14px" },
+    j.status === "rejected" ? null : bcCounts(j),
+    h("div", { class: "kvs" },
+      row("السيرفر", j.guild_name || j.guild_id), row("الهدف", j.target_label), row("أرسله", (j.source === "site" ? "من الموقع · " : "من ديسكورد · ") + (j.by_name || "—")),
+      row("الحالة", (BC_STATE[j.status] || ["", j.status])[1]), row("انطلب", created ? fmtDateTime(created) : null), row("بدا", started ? fmtDateTime(started) : null),
+      row("خلص", finished ? fmtDateTime(finished) : null), row("المدة", started && finished ? span(finished - started) : null),
+      row("الوقت بين الرسائل", j.delay ? `${j.delay} ثانية لكل بوت` : null), row("الوقت المتوقع", j.est_minutes ? `${j.est_minutes} دقيقة` : null),
+      row("صورة", j.has_image ? "أي" : "لا"), row("ملاحظة", j.why || null)),
+    bcBotsTable(j),
+    h("div", { class: "field" }, h("span", { class: "f-label" }, "نص الإعلان"), pv));
+}
+function bcHistoryList() {
+  const st = S(); const u = bcUi(); const all = st.bcHistory || [];
+  if (!all.length) return emptyState("inbox", "السجل فارغ", "كل إعلان ينرسل (من الموقع أو من ديسكورد) ينحفظ هنا بتفاصيله.");
+  const rows = all.slice(0, u.shown);
+  return [h("div", { class: "toolbar" }, h("span", { class: "note" }, `${fmt(all.length)} إعلان محفوظ`), h("span", { class: "sp" }),
+      h("button", { class: "btn ghost", type: "button", onclick: () => downloadCsv("broadcasts", ["date", "server", "target", "source", "by", "status", "total", "sent", "closed", "skipped", "failed", "minutes", "text"],
+        all.map((j) => { const a = toDate(j.started_at), b = toDate(j.finished_at); return [fmtDateTime(toDate(j.created_at)), j.guild_name, j.target_label, j.source, j.by_name, j.status, j.total, j.sent, j.closed, j.skipped, j.failed, a && b ? Math.round((b - a) / 60000) : "", j.text]; })) }, icon("download"), "تنزيل CSV")),
+    h("div", { class: "items" }, rows.map((j) => {
+      const key = "bc/" + j.id; const [cls, label] = BC_STATE[j.status] || ["", j.status];
+      return h("details", { class: "item", open: !!ui.open[key], ontoggle: (ev) => { const was = !!ui.open[key]; ui.open[key] = ev.currentTarget.open; if (was !== ev.currentTarget.open) render(); } },
+        h("summary", {}, h("div", { class: "hist" }, h("div", { class: "t", dir: "auto" }, `${j.guild_name || "—"} · ${j.target_label || "—"}`),
+          h("div", { class: "hist-sub" }, h("span", { class: "state " + cls }, h("i"), label), h("span", { class: "num" }, fmtDateTime(toDate(j.created_at))),
+            j.status === "rejected" ? null : h("span", {}, `${fmt(j.sent)}/${fmt(j.total)} وصلت`))), icon("down", "chev")),
+        ui.open[key] ? h("div", { class: "item-body" }, bcDetails(j)) : null);
+    })),
+    all.length > u.shown ? h("div", { class: "more" }, h("button", { class: "btn ghost", type: "button", onclick: () => { u.shown += 30; render(); } }, `عرض المزيد (باقي ${fmt(all.length - u.shown)})`)) : null];
+}
+function bcBots() {
+  const st = S(); const info = st.bcInfo || {}; const bots = info.bots || []; const guilds = info.guilds || [];
+  const totals = {}; for (const j of bcJobs()) for (const b of j.bots || []) totals[b.id] = (totals[b.id] || 0) + (b.sent || 0);
+  const kind = { main: "البوت الأساسي", site: "من الموقع", env: "من ملف .env" };
+  const prof = info.profile || {}; const vals = effective("broadcast");
+  const out = [h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "بوتات الإرسال"), h("button", { class: "btn ghost", type: "button", onclick: () => bcAction("refresh_info", {}, "طلبت من البوت يحدث المعلومات") }, icon("refresh"), "تحديث")),
+    h("p", { class: "card-note" }, `آخر تحديث ${ago(toDate(info.updated_at))}. تضيف أو تحذف بوت من تبويب الإعدادات.`),
+    h("div", { class: "rows", style: "margin-top:8px;border-top:1px solid var(--border)" }, bots.length ? bots.map((b) => h("div", { class: "row" }, avatar(b.avatar, b.name),
+      h("div", { style: "min-width:0" }, h("div", { class: "name", dir: "auto", style: "text-align:right" }, b.name || b.label),
+        h("div", { class: "sub" }, h("span", {}, kind[b.source] || b.source), b.id ? h("button", { class: "copy-id num", onclick: () => copyText(b.id, "انسخ الآيدي") }, b.id, icon("copy", "sm")) : null),
+        b.note ? h("div", { class: "sub", style: "color:var(--bad)" }, b.note) : null,
+        h("div", { class: "sub" }, guilds.filter((g) => !g.missing).map((g) => h("span", { class: "tag" }, h("i", { style: `background:${(b.guilds || []).includes(g.id) ? "var(--good)" : "var(--bad)"}` }), g.name)))),
+      h("div", { class: "tags" }, h("span", { class: "state " + (b.ready ? "done" : "deleted") }, h("i"), b.ready ? "شغال" : "طافي"), h("span", { class: "tag num" }, `${fmt(totals[b.id] || 0)} رسالة`)))) : h("div", { class: "empty" }, h("p", {}, "ماكو بوتات."))))];
+  out.push(h("section", { class: "card card-pad stack", style: "gap:12px" }, h("h2", { style: "font-size:16px;font-weight:600" }, "الاسم والصورة الموحدة"),
+    h("div", { class: "kvs" }, h("div", { class: "kv" }, h("span", {}, "الاسم"), h("b", { dir: "auto" }, vals.PROFILE_NAME || "ما محدد")), h("div", { class: "kv" }, h("span", {}, "الصورة"), h("b", {}, vals.PROFILE_AVATAR ? "محددة" : "ما محددة"))),
+    prof.lines && prof.lines.length ? h("div", { class: "field" }, h("span", { class: "f-label" }, `آخر تطبيق ${ago(toDate(prof.at))}`), h("ul", { class: "plain" }, prof.lines.map((l) => h("li", { dir: "auto" }, l)))) : null,
+    h("div", { class: "toolbar" }, h("button", { class: "btn", type: "button", onclick: () => { bcUi().tab = "settings"; ui.open["lucifer/broadcast/profile"] = true; render(); } }, "تعديل الاسم والصورة"),
+      h("button", { class: "btn ghost", type: "button", onclick: () => { if (confirm("أعيد تطبيق الاسم والصورة على كل البوتات؟ ديسكورد يسمح بتغيير الاسم تقريباً مرتين بالساعة.")) bcAction("apply_profile", {}, "انرسل الطلب للبوت"); } }, icon("refresh"), "طبّق على كل البوتات الآن"))));
+  out.push(h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "السيرفرات")),
+    h("div", { class: "rows", style: "margin-top:12px;border-top:1px solid var(--border)" }, guilds.map((g) => h("div", { class: "row" }, avatar(g.icon, g.name || "?"),
+      h("div", { style: "min-width:0" }, h("div", { class: "name", dir: "auto", style: "text-align:right" }, g.missing ? `سيرفر ${g.id}` : g.name),
+        h("div", { class: "sub" }, g.missing ? h("span", { style: "color:var(--bad)" }, "البوت الأساسي مو موجود بهذا السيرفر") : [h("span", {}, `${fmt(g.members)} عضو (بدون البوتات)`), h("span", {}, `${fmt(g.ready_bots)} بوت جاهز`)])),
+      h("div", { class: "tags" }, h("span", { class: "tag" }, `${fmt(g.optout)} موقفين`),
+        g.optout ? h("button", { class: "text-btn", style: "margin:0", type: "button", onclick: () => downloadCsv("optout-" + g.id, ["user_id"], (g.optout_ids || []).map((x) => [x])) }, icon("download", "sm"), "قائمتهم") : null))))));
+  return out;
+}
+function bcSendForm() {
+  const st = S(); const u = bcUi(); const info = st.bcInfo || {};
+  const guilds = (info.guilds || []).filter((g) => !g.missing);
+  if (!guilds.length) return emptyState("alert", "ماكو سيرفر جاهز", "البوت الأساسي مال الإعلانات لازم يكون موجود بالسيرفر وشغال.");
+  if (!guilds.some((g) => g.id === u.guild)) u.guild = guilds[0].id;
+  const g = guilds.find((x) => x.id === u.guild); const roles = g.roles || [];
+  if (u.target === "role" && !roles.some((r) => r.id === u.role)) u.role = roles[0] ? roles[0].id : "";
+  const role = roles.find((r) => r.id === u.role);
+  const owners = (info.owners || []).length || 1;
+  const count = u.target === "all" ? g.members : u.target === "role" ? (role ? role.members : 0) : owners;
+  const bots = Math.max(1, g.ready_bots || 0); const minutes = Math.max(1, Math.ceil((count * ((info.delay || 3) + 0.5)) / bots / 60));
+  const busy = bcJobs().some((j) => j.status === "running" && j.guild_id === g.id);
+  const ta = h("textarea", { class: "input", dir: "auto", rows: 6, placeholder: "نص الإعلان. تكدر تستخدم **عريض** و # عناوين والإيموجيات.", "aria-label": "نص الإعلان", "data-fk": "bc:text",
+    oninput: (ev) => { u.text = ev.target.value; if (pv) pv.innerHTML = discordHtml(u.text); counter.textContent = `${fmt(u.text.length)}/4000`; } });
+  ta.value = u.text;
+  const pv = u.preview ? h("div", { class: "preview", dir: "auto" }) : null; if (pv) pv.innerHTML = discordHtml(u.text);
+  const counter = h("span", { class: "muted num", style: "font-size:13px" }, `${fmt(u.text.length)}/4000`);
+  const file = h("input", { type: "file", accept: "image/png,image/jpeg,image/webp,image/gif", hidden: true, onchange: async (ev) => {
+    const picked = ev.target.files[0]; if (!picked) return; u.busy = true; render();
+    try {
+      const out = await prepareImage(picked); const name = `bc-${Date.now().toString(36)}.${out.ext}`; const id = `broadcast~bc~${name}`;
+      await setDoc(sub("images", id), { bot: "broadcast", dir: "bc", name, data: Bytes.fromUint8Array(out.bytes), size: out.bytes.length, content_type: out.type, hash: "", from_site: true, updated_at: serverTimestamp() });
+      u.imageId = id; u.imageUrl = URL.createObjectURL(new Blob([out.bytes], { type: out.type })); toast("انرفعت الصورة");
+    } catch (e) { toast(e.userMessage || explainError(e), 4500); }
+    u.busy = false; render();
+  } });
+  const chip = (on, label, fn) => h("button", { class: "chip", type: "button", "aria-pressed": String(on), onclick: fn }, label);
+  const send = async () => {
+    if (!u.text.trim() && !u.imageId) { toast("اكتب نص الإعلان أو ارفع صورة.", 3500); return; }
+    if (u.text.length > 4000) { toast("النص أطول من 4000 حرف.", 3500); return; }
+    if (u.target === "role" && !u.role) { toast("اختار الرتبة.", 3500); return; }
+    const who = u.target === "test" ? "الأونرات بس (تجربة)" : u.target === "role" ? `رتبة ${role ? role.name : ""}` : "كل الأعضاء";
+    if (!confirm(`ترسل الإعلان بسيرفر ${g.name} إلى ${who}؟\nتقريباً ${fmt(count)} عضو، وياخذ حوالي ${minutes} دقيقة.`)) return;
+    const request_id = "site-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    u.busy = true; render();
+    const ok = await bcAction("bc_send", { request_id, guild_id: g.id, target: u.target, role_id: u.target === "role" ? u.role : "", text: u.text, image_id: u.imageId || "" }, "انرسل الطلب للبوت");
+    u.busy = false;
+    if (ok) { u.wait = request_id; u.text = ""; u.imageId = null; u.imageUrl = null; u.tab = "overview"; }
+    render();
+  };
+  return [h("section", { class: "card card-pad stack", style: "gap:20px" },
+    h("div", { class: "field" }, h("span", { class: "f-label" }, "السيرفر"), h("div", { class: "chips" }, guilds.map((x) => chip(x.id === g.id, x.name, () => { u.guild = x.id; render(); })))),
+    h("div", { class: "field" }, h("span", { class: "f-label" }, "منو يوصله"), h("div", { class: "chips" },
+      chip(u.target === "all", `كل الأعضاء (${fmt(g.members)})`, () => { u.target = "all"; render(); }),
+      chip(u.target === "role", "رتبة معينة", () => { u.target = "role"; render(); }),
+      chip(u.target === "test", "تجربة: لي بس", () => { u.target = "test"; render(); })),
+      u.target === "role" ? h("select", { class: "input", "aria-label": "الرتبة", onchange: (ev) => { u.role = ev.target.value; render(); } },
+        roles.map((r) => h("option", { value: r.id, selected: r.id === u.role }, `${r.name} (${fmt(r.members)})`))) : null,
+      u.target === "test" ? h("div", { class: "f-help" }, "يوصل بس لصاحب السيرفر والأونرات، حتى تشوف شكله بالخاص قبل ما ترسله للكل.") : null),
+    h("div", { class: "field" }, h("div", { class: "field-head" }, h("span", { class: "f-label" }, "نص الإعلان"), counter,
+      h("button", { class: "text-btn", type: "button", "aria-pressed": String(u.preview), onclick: () => { u.preview = !u.preview; render(); } }, icon(u.preview ? "eyeoff" : "eye", "sm"), u.preview ? "إخفاء المعاينة" : "معاينة")), ta, pv),
+    h("div", { class: "field" }, h("span", { class: "f-label" }, "صورة (اختياري)"),
+      h("div", { class: "image-field" }, u.imageUrl ? h("div", { class: "shot" }, h("img", { src: u.imageUrl, alt: "صورة الإعلان" })) : null,
+        h("div", { class: "toolbar" }, h("button", { class: "btn", type: "button", disabled: u.busy, onclick: () => file.click() }, icon("image"), u.imageUrl ? "تبديل الصورة" : "رفع صورة"),
+          u.imageUrl ? h("button", { class: "btn ghost danger", type: "button", onclick: () => { u.imageId = null; u.imageUrl = null; render(); } }, icon("trash"), "شيل الصورة") : null, file))),
+    h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, `يوصل تقريباً لـ ${fmt(count)} عضو، وياخذ حوالي ${minutes} دقيقة`),
+      `${fmt(bots)} بوت جاهز بهذا السيرفر، وكل بوت يرسل رسالة كل ${info.delay || 3} ثواني. اللي موقفين الإعلانات (${fmt(g.optout)}) ما توصلهم.`)),
+    busy ? h("div", { class: "notice bad" }, icon("alert"), h("div", {}, "أكو إعلان قاعد ينرسل بهذا السيرفر. انتظره يخلص أو وقفه من نظرة عامة.")) : null,
+    h("div", {}, h("button", { class: "btn primary", type: "button", disabled: u.busy || busy, onclick: send }, icon("send"), u.busy ? "يرسل..." : "إرسال الإعلان")))];
+}
 // ------------------------------------------------------------------ التشغيل
 window.addEventListener("hashchange", () => {
   const before = store.server; readRoute(); remember(); closeDrawer();
   if (store.server !== before) watch();
   store.focusMain = true; render();
 });
-window.addEventListener("beforeunload", (ev) => { if (store.user && ["main", "tickets"].some(isDirty)) { ev.preventDefault(); ev.returnValue = ""; } });
+window.addEventListener("beforeunload", (ev) => { if (store.user && BOT_KEYS.some(isDirty)) { ev.preventDefault(); ev.returnValue = ""; } });
 let resizeTimer; window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { if (store.page.startsWith("stats")) render(); }, 180); });
 onAuthStateChanged(auth, (user) => {
   store.user = user; store.denied = !!user && !MANAGER_EMAILS.includes((user.email || "").toLowerCase());
