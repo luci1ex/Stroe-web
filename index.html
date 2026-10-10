@@ -1242,7 +1242,7 @@ function bcDetails(j) {
       row("الحالة", (BC_STATE[j.status] || ["", j.status])[1]), row("انطلب", created ? fmtDateTime(created) : null), row("بدا", started ? fmtDateTime(started) : null),
       row("خلص", finished ? fmtDateTime(finished) : null), row("المدة", started && finished ? span(finished - started) : null),
       row("الوقت بين الرسائل", j.delay ? `${j.delay} ثانية لكل بوت` : null), row("الوقت المتوقع", j.est_minutes ? `${j.est_minutes} دقيقة` : null),
-      row("صورة", j.has_image ? "أي" : "لا"), row("ملاحظة", j.why || null)),
+      row("صورة", j.has_image ? "أي" : "لا"), row("انقطع ورجع كمل", j.resumed ? `${j.resumed} مرة` : null), row("ملاحظة", j.why || null)),
     bcBotsTable(j),
     h("div", { class: "field" }, h("span", { class: "f-label" }, "نص الإعلان"), pv));
 }
