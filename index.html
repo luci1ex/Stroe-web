@@ -679,6 +679,13 @@ function drawMain(page) {
   if (st.error) body.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أجيب البيانات"), st.error)));
   if (page.id === "customers") body.push(drawCustomers());
   else if (page.id === "bot-broadcast") body.push(drawBroadcast());
+  else if (page.id === "bot-security") {
+    body.push(h("div", { class: "notice", role: "note" }, icon("shield"), h("div", {},
+      h("b", {}, "مكافحة السب والقذف بالذكاء الاصطناعي"),
+      "تظهر إعدادات هذه الحماية ضمن مجموعتها أدناه. يحذف البوت الرسالة المسيئة، وعند تكرار المخالفة ضمن النافذة المحددة يفرض تايم أوت (الافتراضي 30 دقيقة). الفحص المحلي يساعد على كشف التحايل بالرموز والحروف المكررة؛ أما التصنيف السياقي فيحتاج مفتاح OPENAI_API_KEY داخل .env على الاستضافة، ولا تضع المفتاح في لوحة الموقع."
+    )));
+    body.push(drawControl(page.bot));
+  }
   else if (page.bot) body.push(drawControl(page.bot));
   else if (page.id === "stats-tickets") body.push(drawTicketStats());
   else body.push(drawReviewStats());
