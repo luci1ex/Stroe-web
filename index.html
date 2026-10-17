@@ -1414,7 +1414,7 @@ function trOverview() {
   const pending = reqs.filter((r) => r.status === "pending"); const wdPending = wds.filter((w) => w.status === "pending");
   const day = Date.now() - 864e5; const month = Date.now() - 30 * 864e5;
   const today = reqs.filter((r) => r.status === "approved" && toDate(r.decided_at) && toDate(r.decided_at).getTime() > day);
-  const dups = reqs.filter((r) => r.status === "duplicate" || (r.similar || []).length).length;
+  const dups = reqs.filter((r) => r.status === "duplicate" || (r.similar || []).length || (r.likely || []).length).length;
   const holders = (st.trWallets || []).filter((w) => Object.values(w.balances || {}).some((v) => Number(v) > 0)).length;
   const totals = trTotals();
   const out = [h("div", { class: "kpis" },
@@ -1462,7 +1462,7 @@ function trReceipts() {
 }
 function trReceiptItem(r) {
   const key = "tr/" + r.num; const [cls, label] = TR_STATE[r.status] || ["", r.status]; const c = trCur(r.currency);
-  const warn = r.status === "duplicate" || (r.similar || []).length || r.ocr_error || (r.ocr && r.ocr.is_receipt === false);
+  const warn = r.status === "duplicate" || (r.similar || []).length || (r.likely || []).length || r.ocr_error || (r.ocr && r.ocr.is_receipt === false);
   const amount = r.status === "approved" ? r.amount : r.amount_ocr;
   return h("details", { class: "item", open: !!ui.open[key], ontoggle: (ev) => { const was = !!ui.open[key]; ui.open[key] = ev.currentTarget.open; if (ev.currentTarget.open) trLoadThumb(r.num); if (was !== ev.currentTarget.open) render(); } },
     h("summary", {}, h("div", { class: "hist" }, h("div", { class: "t", dir: "auto" }, `#${r.num} · `, trCurTag(r.currency), ` · ${r.user_name || r.user_id}`),
@@ -1476,6 +1476,7 @@ function trReceiptDetails(r) {
   const thumb = st.trThumbs[r.num];
   const warns = [];
   if (r.status === "duplicate" || r.dup_of) warns.push(`نفس وصل #${r.dup_of} (نفس رقم العملية أو نفس الصورة).`);
+  for (const s of r.likely || []) warns.push(`⛔ غالباً نفس صورة وصل #${s.num} من ${s.user_name || s.user_id} (${s.status_label || ""}) — تأكد من رقم العملية.`);
   for (const s of r.similar || []) warns.push(`يشبه وصل #${s.num} من ${s.user_name || s.user_id} (${s.status_label || ""}).`);
   if (r.ocr_error) warns.push(`ما انقرا تلقائياً: ${r.ocr_error}`);
   else if (o.is_receipt === false) warns.push("الصورة ما تبين وصل تحويل.");
