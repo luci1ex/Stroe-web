@@ -417,6 +417,11 @@ body.chat-mode .savebar { display: none; }
 .pend .note { color: var(--warn); font-size: 12px; }
 .composer { border-top: 1px solid var(--border); background: var(--card); padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); display: grid; gap: 8px; }
 #chat-extra:empty { display: none; }
+.badge-n { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #da373c; color: #fff; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+.msg.jump { background: rgba(230, 215, 36, .14); transition: background 1s; }
+.mention-item { margin-top: 0; padding-block: 10px; border-bottom: 1px solid var(--border); }
+.mention-item.fresh { box-shadow: inset 3px 0 0 var(--accent); }
+.m-room { font-size: 12px; color: var(--muted); background: var(--raised); border-radius: 6px; padding: 1px 6px; }
 .composer .row { display: flex; align-items: flex-end; gap: 6px; }
 .composer textarea { flex: 1; min-width: 0; resize: none; max-height: 40vh; min-height: 44px; line-height: 1.5; field-sizing: content; padding: 10px 12px; }
 .composer .icon-btn { border-color: transparent; }
@@ -537,6 +542,7 @@ const ICONS = {
   wallet: "M3 7a2 2 0 0 1 2-2h12v4M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16.5 14h.01",
   check: "M5 12.5l4.5 4.5L19 7",
   megaphone: "M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1zM17 9a3.5 3.5 0 0 1 0 6M19.5 6a7.5 7.5 0 0 1 0 12",
+  bell: "M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0",
   chat: "M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1zM8 10h8M8 13h5",
   reply: "M10 8L4 13l6 5M4 13h10a6 6 0 0 1 6 6",
   edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
@@ -1686,7 +1692,12 @@ function trWallets() {
 const CHAT_PAGE = "bot-chat";
 const CHUNK = 900 * 1024;
 const QUICK_EMOJI = ["👍", "❤️", "😂", "🔥", "✅", "❌", "👀", "🙏", "💰", "🎉", "😮", "😢", "💯", "⭐", "👋", "🤝"];
-const chatSubs = { server: null, chUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false };
+const chatSubs = { server: null, chUnsub: null, mUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false };
+const MENTIONS = "_mentions";
+const isRoom = (id) => !!id && id !== MENTIONS;
+function chatSeen() { try { return +localStorage.getItem("chat.mseen") || 0; } catch { return 0; } }
+function chatMarkSeen() { try { localStorage.setItem("chat.mseen", String(Date.now())); } catch {} }
+function chatUnseen() { const d = chatState().chatMentions; const seen = chatSeen(); return ((d && d.items) || []).filter((x) => (toDate(x.at) || 0) > seen).length; }
 function chatUi() {
   return (ui.chat ||= { ch: null, view: "list", q: "", text: "", files: [], reply: null, edit: null, sel: null, limit: 50,
     sending: [], fromBottom: 0, emo: false, emoQ: "", map: {}, silent: false, progress: null });
@@ -1696,9 +1707,9 @@ function chatAction(name, extra = {}) {
   return addDoc(subcol("actions"), { bot: "main", name, at: serverTimestamp(), ...extra });
 }
 function chatTeardown() {
-  if (chatSubs.chUnsub) chatSubs.chUnsub(); if (chatSubs.msgUnsub) chatSubs.msgUnsub();
+  if (chatSubs.chUnsub) chatSubs.chUnsub(); if (chatSubs.msgUnsub) chatSubs.msgUnsub(); if (chatSubs.mUnsub) chatSubs.mUnsub();
   clearInterval(chatSubs.timer);
-  Object.assign(chatSubs, { server: null, chUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false });
+  Object.assign(chatSubs, { server: null, chUnsub: null, mUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false });
 }
 function chatSync() {
   const on = store.user && !store.denied && store.page === CHAT_PAGE && store.server === "lucifer";
@@ -1707,16 +1718,17 @@ function chatSync() {
   if (chatSubs.server !== store.server) {
     chatTeardown(); chatSubs.server = store.server;
     chatSubs.chUnsub = onSnapshot(sub("console", "_channels"), (d) => { st.chatCh = d.exists() ? d.data() : false; render(); }, (e) => { st.chatErr = explainError(e); render(); });
+    chatSubs.mUnsub = onSnapshot(sub("console", MENTIONS), (d) => { st.chatMentions = d.exists() ? d.data() : { items: [] }; if (chatUi().ch === MENTIONS) chatMarkSeen(); render(); }, () => {});
     chatAction("console_channels").catch((e) => toast(explainError(e), 4200));
     chatSubs.timer = setInterval(() => {
-      if (document.visibilityState === "visible" && chatUi().ch && store.page === CHAT_PAGE) chatAction("console_ping", { channel_id: chatUi().ch }).catch(() => {});
+      if (document.visibilityState === "visible" && isRoom(chatUi().ch) && store.page === CHAT_PAGE) chatAction("console_ping", { channel_id: chatUi().ch }).catch(() => {});
       chatCheckPending();
     }, 50000);
   }
   if (chatSubs.msgId !== c.ch) {
     if (chatSubs.msgUnsub) chatSubs.msgUnsub();
     chatSubs.msgUnsub = null; chatSubs.msgId = c.ch;
-    if (c.ch) {
+    if (isRoom(c.ch)) {
       const id = c.ch;
       chatSubs.msgUnsub = onSnapshot(sub("console", id), (d) => {
         const data = d.exists() ? d.data() : null; st.chatDocs[id] = data;
@@ -1731,7 +1743,7 @@ function chatSync() {
 }
 document.addEventListener("visibilitychange", () => {
   const c = ui.chat;
-  if (document.visibilityState === "visible" && c && c.ch && store.page === CHAT_PAGE) chatAction("console_open", { channel_id: c.ch, limit: c.limit }).catch(() => {});
+  if (document.visibilityState === "visible" && c && isRoom(c.ch) && store.page === CHAT_PAGE) chatAction("console_open", { channel_id: c.ch, limit: c.limit }).catch(() => {});
 });
 function chatResult(res) {
   const c = chatUi(); const i = c.sending.findIndex((p) => p.nonce === res.nonce);
@@ -1755,7 +1767,9 @@ const chatNonce = (k = "s") => k + Date.now().toString(36) + Math.random().toStr
 
 function chatChannel(id) { const d = chatState().chatCh; return d && (d.channels || []).find((x) => x.id === id); }
 function chatOpen(id) {
-  const c = chatUi(); if (c.ch !== id) { c.ch = id; c.limit = 50; c.sel = null; c.reply = null; c.edit = null; c.fromBottom = 0; c.emo = false; }
+  const c = chatUi();
+  if (id === MENTIONS) { c.mentionsSeenBefore = chatSeen(); chatMarkSeen(); }
+  if (c.ch !== id) { c.ch = id; c.limit = 50; c.sel = null; c.reply = null; c.edit = null; c.fromBottom = 0; c.emo = false; }
   c.view = "conv"; try { localStorage.setItem("chat.ch", id); } catch {}
   render();
 }
@@ -1811,9 +1825,11 @@ function chatMsg(m, prev, doc) {
   const pAt = prev && toDate(prev.at);
   const cont = prev && !m.reply && !m.system && !prev.system && prev.uid === m.uid && at && pAt && at - pAt < 7 * 60000;
   const sel = c.sel === m.id;
-  const mentioned = bot.id && (m.text || "").includes(`<@${bot.id}>`);
+  const ids = ((chatState().chatMentions || {}).ids) || (bot.id ? [bot.id] : []);
+  const mentioned = !m.mine && ids.some((id) => new RegExp(`<@!?${id}>`).test(m.text || ""));
+  const jump = c.jump === m.id || (c.jumpHi && c.jumpHi.id === m.id && c.jumpHi.until > Date.now());
   const body = [];
-  if (m.reply) body.push(h("div", { class: "reply-line" }, m.reply.name ? h("b", { style: m.reply.color ? `color:${roleColor(m.reply.color)}` : null }, m.reply.name) : null, h("span", {}, plain(m.reply.text))));
+  if (m.reply) body.push(h("div", { class: "reply-line" }, m.reply.name ? h("b", { style: m.reply.color ? `color:${roleColor(m.reply.color)}` : null }, m.reply.name) : null, rich("span", "", String(m.reply.text || "").replace(/\s*\n+\s*/g, " "), doc.names)));
   if (!cont) body.push(h("div", { class: "hd" }, h("b", { style: m.color ? `color:${roleColor(m.color)}` : null }, m.name), m.bot ? h("span", { class: "tag-bot" }, "BOT") : null,
     h("time", {}, at ? (dayKey(at) === dayKey(new Date()) ? "اليوم " : fmtDate(at) + " ") + chatTime(at) : "")));
   if (m.system) body.push(h("div", { class: "sys" }, m.system));
@@ -1848,7 +1864,7 @@ function chatMsg(m, prev, doc) {
   if ((m.reactions || []).length) body.push(h("div", { class: "reacts" }, m.reactions.map((r) => h("button", { class: "react" + (r.me ? " me" : ""), type: "button",
     onclick: (ev) => { ev.stopPropagation(); chatDo("console_react", { message_id: m.id, emoji: r.e }); } }, emojiNode(r.e), h("span", { class: "num" }, r.n)))));
   if (sel) body.push(chatMsgActions(m));
-  return h("div", { class: `msg${cont ? " cont" : ""}${sel ? " sel" : ""}${mentioned ? " mentioned" : ""}`, "data-id": m.id,
+  return h("div", { class: `msg${cont ? " cont" : ""}${sel ? " sel" : ""}${mentioned ? " mentioned" : ""}${jump ? " jump" : ""}`, "data-id": m.id,
     onclick: (ev) => { if (ev.target.closest("a,button,video,.sp")) return; c.sel = sel ? null : m.id; chatRefresh(); } },
     cont ? h("div", { class: "gut" }, at ? chatTime(at).replace(/\s?[صمAP]M?$/i, "") : "") : h("img", { class: "av", src: m.avatar, alt: "", loading: "lazy" }),
     h("div", { class: "mb" }, body));
@@ -2013,6 +2029,9 @@ function chatRefreshList() {
   const kids = [h("div", { class: "ch-bot" }, d.bot && d.bot.avatar ? h("img", { src: d.bot.avatar, alt: "" }) : null, h("div", {}, h("b", {}, (d.bot && d.bot.name) || "البوت"), h("span", {}, "تكتب باسم البوت"))),
     h("div", { class: "field-icon" }, icon("search"), h("input", { class: "input", id: "chat-q", type: "search", placeholder: "دور روم", value: c.q, "aria-label": "دور روم",
       oninput: (ev) => { c.q = ev.target.value; chatRefreshList(); } }))];
+  const unseen = chatUnseen();
+  kids.push(h("button", { class: "ch-btn", type: "button", "aria-current": String(c.ch === MENTIONS), onclick: () => chatOpen(MENTIONS) },
+    icon("bell", "sm"), h("span", { class: "nm" }, "المنشنات"), unseen ? h("span", { class: "badge-n" }, unseen > 99 ? "99+" : unseen) : null));
   let cat = null;
   for (const x of rows) {
     if (x.cat_name !== cat) { cat = x.cat_name; if (cat) kids.push(h("div", { class: "ch-cat" }, cat)); }
@@ -2028,6 +2047,13 @@ function chatRefreshHead() {
   const box = document.getElementById("chat-head"); if (!box) return;
   const c = chatUi(); const ch = chatChannel(c.ch); const stt = S().status.main; const hb = stt && toDate(stt.heartbeat);
   const on = hb && Date.now() - hb.getTime() < 25 * 60000;
+  const comp = document.getElementById("chat-comp"); if (comp) comp.hidden = c.ch === MENTIONS;
+  if (c.ch === MENTIONS) {
+    box.replaceChildren(
+      h("button", { class: "icon-btn bare back-btn", type: "button", "aria-label": "رجوع للرومات", onclick: () => { c.view = "list"; chatRefresh(); } }, icon("back")),
+      h("div", { class: "t" }, h("b", {}, icon("bell", "sm"), "المنشنات"), h("span", {}, "منشنات البوت وحسابك، اضغط على وحدة حتى تروح لرسالتها")));
+    return;
+  }
   box.replaceChildren(
     h("button", { class: "icon-btn bare back-btn", type: "button", "aria-label": "رجوع للرومات", onclick: () => { c.view = "list"; chatRefresh(); } }, icon("back")),
     h("div", { class: "t" }, h("b", { dir: "auto" }, icon(ch && ch.voice ? "speaker" : "hash", "sm"), ch ? ch.name : c.ch ? "روم" : "اختار روم"),
@@ -2039,6 +2065,7 @@ function chatRefreshMsgs() {
   const c = chatUi(); const d = c.ch ? chatState().chatDocs[c.ch] : null;
   const fromBottom = c.fromBottom;
   const kids = [];
+  if (c.ch === MENTIONS) { chatMentionsView(box); return; }
   if (!c.ch) kids.push(h("div", { class: "chat-empty" }, emptyState("hash", "اختار روم", "اختار روم من القائمة حتى تشوف رسائله وتكتب بيه باسم البوت.")));
   else if (d === undefined || (d && !d.messages && !d.error)) kids.push(h("div", { style: "padding:16px;display:grid;gap:16px" }, [1, 2, 3, 4].map(() => h("div", { style: "display:flex;gap:12px" }, sk("40px", "40px", "border-radius:50%"), h("div", { style: "flex:1;display:grid;gap:6px" }, sk("30%", "14px"), sk("80%", "14px"))))));
   else if (d && d.error) kids.push(h("div", { style: "padding:16px" }, h("div", { class: "notice bad" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أفتح الروم"), d.error))));
@@ -2064,7 +2091,28 @@ function chatRefreshMsgs() {
         p.late ? h("div", { class: "note" }, "ما وصل رد من البوت. يمكن طافي، تأكد منه.") : null)));
   }
   box.replaceChildren(...kids);
-  box.scrollTop = Math.max(0, box.scrollHeight - box.clientHeight - fromBottom);
+  const jumpEl = c.jump && box.querySelector(`.msg[data-id="${c.jump}"]`);
+  if (c.jump && !jumpEl && d && d.messages && d.messages.length) { c.jump = null; toast("الرسالة أقدم من اللي محمل، اضغط «رسائل أقدم»", 3500); }
+  if (jumpEl) { jumpEl.scrollIntoView({ block: "center" }); c.fromBottom = box.scrollHeight - box.scrollTop - box.clientHeight; c.jumpHi = { id: c.jump, until: Date.now() + 2500 }; c.jump = null; }
+  else box.scrollTop = Math.max(0, box.scrollHeight - box.clientHeight - fromBottom);
+}
+function chatMentionsView(box) {
+  const c = chatUi(); const d = chatState().chatMentions;
+  const items = [...((d && d.items) || [])].reverse(); const seen = c.mentionsSeenBefore ?? chatSeen();
+  const kids = [];
+  if (d === undefined) kids.push(h("div", { style: "padding:16px" }, sk("100%", "60px")));
+  else if (!items.length) kids.push(h("div", { class: "chat-empty" }, emptyState("bell", "ماكو منشنات بعد", "أول ما أحد يمنشن البوت أو حسابك (أو يرد عليهم) تطلع رسالته هنا. تكدر تضيف حسابات ثانية من إعدادات البوت الأساسي ← شات البوت بالموقع.")));
+  for (const x of items) {
+    const at = toDate(x.at); const fresh = at && at > seen;
+    kids.push(h("div", { class: "msg mention-item" + (fresh ? " fresh" : ""), onclick: () => { c.jump = x.id; chatOpen(x.channel_id); } },
+      h("img", { class: "av", src: x.avatar || "", alt: "", loading: "lazy" }),
+      h("div", { class: "mb" },
+        h("div", { class: "hd" }, h("b", { style: x.color ? `color:${roleColor(x.color)}` : null }, x.name), h("span", { class: "m-room", dir: "auto" }, "# " + (x.channel || "روم")),
+          h("time", {}, at ? (dayKey(at) === dayKey(new Date()) ? "اليوم " : fmtDate(at) + " ") + chatTime(at) : "")),
+        rich("div", "txt", x.text, x.names || {}),
+        h("div", { class: "f-help" }, (x.reply ? "رد على " : "منشن لـ ") + (x.to || []).map((t) => (t.bot ? "البوت" : t.name)).join(" و ")))));
+  }
+  box.replaceChildren(...kids); box.scrollTop = 0;
 }
 function chatRefreshExtra() {
   const box = document.getElementById("chat-extra"); if (!box) return;
