@@ -1507,7 +1507,7 @@ function trWithdrawals() {
     rows.length > u.shown ? h("div", { class: "more" }, h("button", { class: "btn ghost", type: "button", onclick: () => { u.shown += 30; render(); } }, `عرض المزيد (باقي ${fmt(rows.length - u.shown)})`)) : null];
 }
 function trWithdrawalItem(w) {
-  const key = "wd/" + w.num; const [cls, label] = WD_STATE[w.status] || ["", w.status]; const src = trCur(w.from), dst = trCur(w.to);
+  const key = "wd/" + w.num; const [cls, label] = WD_STATE[w.status] || ["", w.status]; const src = trCur(w.from), dst = w.to_name && !trCurrencies().some((c) => c.key === w.to) ? { key: w.to, name: w.to_name, unit: w.to_unit || "" } : trCur(w.to);
   const u = trUi(); const f = (u.form["w" + w.num] ||= { note: "" });
   const row = (k, v) => (v == null || v === "" ? null : h("div", { class: "kv" }, h("span", {}, k), h("b", { dir: "auto" }, String(v))));
   return h("details", { class: "item", open: !!ui.open[key], ontoggle: (ev) => { const was = !!ui.open[key]; ui.open[key] = ev.currentTarget.open; if (was !== ev.currentTarget.open) render(); } },
