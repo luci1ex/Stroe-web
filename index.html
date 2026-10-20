@@ -323,6 +323,122 @@ dialog.sheet::backdrop { background: rgba(0, 0, 0, .64); }
 .sheet-foot .input { flex: 1; min-width: 0; }
 .toast { position: fixed; bottom: calc(88px + env(safe-area-inset-bottom)); inset-inline: 0; margin-inline: auto; width: max-content; max-width: calc(100vw - 32px); z-index: 100; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; opacity: 0; transform: translateY(8px); transition: opacity var(--fast), transform var(--fast) var(--ease-out); pointer-events: none; }
 .toast.show { opacity: 1; transform: none; }
+/* ------------------------------------------------------------------ شات البوت */
+body.chat-mode main { padding: 0; max-width: none; display: block; height: calc(100dvh - var(--bar-h) - env(safe-area-inset-top)); }
+body.chat-mode main > * { max-width: none; }
+body.chat-mode .savebar { display: none; }
+.chat { display: grid; grid-template-columns: minmax(0, 1fr); height: 100%; min-height: 0; }
+.chat .ch-list, .chat .conv { min-height: 0; min-width: 0; }
+@media (max-width: 799px) { .chat[data-view="list"] .conv, .chat[data-view="conv"] .ch-list { display: none; } }
+@media (min-width: 800px) { .chat { grid-template-columns: 280px minmax(0, 1fr); } .conv .back-btn { display: none; } }
+.ch-list { overflow-y: auto; overscroll-behavior: contain; background: var(--card); border-inline-end: 1px solid var(--border); padding: 12px 8px 24px; display: flex; flex-direction: column; gap: 2px; }
+.ch-list .field-icon { margin: 0 4px 8px; }
+.ch-cat { display: flex; align-items: center; gap: 6px; color: var(--faint); font-size: 12px; font-weight: 700; padding: 14px 8px 4px; text-transform: uppercase; letter-spacing: .02em; }
+.ch-btn { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 10px; border-radius: 8px; color: var(--muted); font-size: 15px; text-align: start; transition: background var(--fast), color var(--fast); }
+.ch-btn:hover { background: var(--raised); color: var(--text); }
+.ch-btn[aria-current="true"] { background: var(--hover); color: var(--text); font-weight: 600; }
+.ch-btn .nm { flex: 1; min-width: 0; text-align: right; unicode-bidi: plaintext; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-btn .ic { color: var(--faint); }
+.ch-btn.thread { padding-inline-start: 28px; font-size: 14px; min-height: 36px; }
+.ch-btn .lock { width: 14px; height: 14px; color: var(--faint); }
+.ch-bot { display: flex; align-items: center; gap: 10px; padding: 4px 8px 12px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+.ch-bot img { width: 36px; height: 36px; border-radius: 50%; }
+.ch-bot b { display: block; font-size: 15px; } .ch-bot span { color: var(--muted); font-size: 12px; }
+.conv { display: flex; flex-direction: column; background: var(--bg); position: relative; }
+.conv-head { display: flex; align-items: center; gap: 8px; padding: 6px 8px; min-height: 52px; border-bottom: 1px solid var(--border); background: var(--card); }
+.conv-head .t { flex: 1; min-width: 0; }
+.conv-head .t b { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.conv-head .t span { display: block; color: var(--faint); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msgs { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 8px 0 12px; -webkit-overflow-scrolling: touch; }
+.msgs .older { display: flex; justify-content: center; padding: 8px; }
+.day-sep { display: flex; align-items: center; gap: 8px; color: var(--faint); font-size: 12px; font-weight: 600; margin: 14px 16px 6px; }
+.day-sep::before, .day-sep::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.msg { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 12px; padding: 4px 14px; margin-top: 12px; position: relative; cursor: pointer; transition: background var(--fast); }
+.msg.cont { margin-top: 0; padding-block: 1px; }
+.msg:hover { background: color-mix(in srgb, var(--raised) 55%, transparent); }
+.msg.sel { background: var(--raised); }
+.msg.mentioned { background: rgba(250, 168, 26, .08); box-shadow: inset 2px 0 0 #faa81a; }
+.msg .av { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--raised); }
+.msg .gut { width: 40px; color: var(--faint); font-size: 10px; text-align: center; padding-top: 4px; opacity: 0; }
+.msg:hover .gut, .msg.sel .gut { opacity: 1; }
+.msg .mb { min-width: 0; display: grid; gap: 4px; grid-template-columns: minmax(0, 1fr); justify-items: start; }
+.msg .mb > * { max-width: 100%; }
+.msg .mb > .txt, .msg .mb > .hd, .msg .mb > .reply-line, .msg .mb > .msg-acts { justify-self: stretch; }
+.msg .hd { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.msg .hd b { font-weight: 600; font-size: 15px; }
+.msg .hd time { color: var(--faint); font-size: 12px; }
+.msg .tag-bot { font-size: 10px; font-weight: 700; padding: 1px 5px; border-radius: 4px; background: #5865f2; color: #fff; align-self: center; }
+.msg .txt { font-size: 15px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.msg .txt .edited { color: var(--faint); font-size: 11px; margin-inline-start: 4px; }
+.msg .txt.jumbo img.e { width: 44px; height: 44px; }
+.msg .sys { color: var(--muted); font-size: 14px; font-style: italic; }
+.rich img.e { width: 22px; height: 22px; vertical-align: -5px; object-fit: contain; }
+.rich a { color: #00a8fc; text-decoration: none; } .rich a:hover { text-decoration: underline; }
+.rich code { background: var(--raised); padding: 1px 5px; border-radius: 4px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; direction: ltr; unicode-bidi: isolate; }
+.rich pre { margin: 4px 0; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; overflow-x: auto; direction: ltr; text-align: left; white-space: pre; }
+.rich pre code { background: none; padding: 0; }
+.rich .m { background: rgba(88, 101, 242, .3); color: #c9cdfb; border-radius: 4px; padding: 0 3px; font-weight: 500; }
+.rich .h1 { font-size: 1.5em; font-weight: 700; line-height: 1.3; } .rich .h2 { font-size: 1.25em; font-weight: 700; } .rich .h3 { font-size: 1.05em; font-weight: 700; }
+.rich .sub { font-size: 12px; color: var(--faint); }
+.rich .q { display: block; border-inline-start: 4px solid var(--control); padding-inline-start: 10px; }
+.rich .sp { background: #1e1f22; color: transparent; border-radius: 4px; cursor: pointer; } .rich .sp.on { color: inherit; background: var(--raised); }
+.rich .ts { background: var(--raised); border-radius: 4px; padding: 0 3px; }
+.reply-line { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); min-width: 0; padding-inline-start: 4px; }
+.reply-line::before { content: "↰"; color: var(--faint); }
+.reply-line b { font-weight: 600; flex: none; }
+.reply-line span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.att-img { display: block; max-width: min(100%, 360px); max-height: 360px; width: auto; height: auto; border-radius: 8px; background: var(--raised); object-fit: contain; }
+.att-img.spoil { filter: blur(28px); }
+.att-file { display: flex; align-items: center; gap: 10px; max-width: 400px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: #00a8fc; text-decoration: none; font-size: 14px; }
+.att-file small { color: var(--faint); margin-inline-start: auto; }
+.atts { display: flex; flex-wrap: wrap; gap: 6px; }
+.emb { width: min(100%, 520px); min-width: 0; grid-template-columns: minmax(0, 1fr); background: var(--card); border: 1px solid var(--border); border-inline-start: 4px solid var(--control); border-radius: 6px; padding: 10px 14px 12px; display: grid; gap: 6px; font-size: 14px; }
+.emb .ea { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; }
+.emb .ea img { width: 22px; height: 22px; border-radius: 50%; }
+.emb .et { font-weight: 700; font-size: 15px; }
+.emb .flds { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.emb .fld { min-width: 0; } .emb .fld.full { grid-column: 1 / -1; }
+.emb .fld b { display: block; font-size: 13px; }
+.emb .ei { max-width: 100%; max-height: 300px; width: auto; height: auto; border-radius: 6px; object-fit: contain; justify-self: start; }
+.emb .eth { float: inline-end; width: 72px; height: 72px; object-fit: cover; border-radius: 6px; margin-inline-start: 10px; }
+.emb .ef { color: var(--faint); font-size: 12px; }
+.dbtns { display: flex; flex-wrap: wrap; gap: 6px; }
+.dbtn { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px; border-radius: 6px; font-size: 14px; font-weight: 500; color: #fff; background: #4e5058; cursor: default; }
+.dbtn.s1 { background: #5865f2; } .dbtn.s3 { background: #248046; } .dbtn.s4 { background: #da373c; }
+.dbtn.off { opacity: .5; } a.dbtn { cursor: pointer; text-decoration: none; }
+.dbtn img.e { width: 18px; height: 18px; }
+.reacts { display: flex; flex-wrap: wrap; gap: 4px; }
+.react { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 14px; }
+.react.me { border-color: #5865f2; background: rgba(88, 101, 242, .15); }
+.react img.e { width: 18px; height: 18px; }
+.msg-acts { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 4px; }
+.msg-acts .btn { min-height: 36px; padding: 0 10px; font-size: 13px; }
+.pend { opacity: .55; }
+.pend .note { color: var(--warn); font-size: 12px; }
+.composer { border-top: 1px solid var(--border); background: var(--card); padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); display: grid; gap: 8px; }
+#chat-extra:empty { display: none; }
+.composer .row { display: flex; align-items: flex-end; gap: 6px; }
+.composer textarea { flex: 1; min-width: 0; resize: none; max-height: 40vh; min-height: 44px; line-height: 1.5; field-sizing: content; padding: 10px 12px; }
+.composer .icon-btn { border-color: transparent; }
+.composer .send { background: var(--primary); color: var(--on-primary); }
+.composer .send:hover { background: var(--primary); filter: brightness(1.08); color: var(--on-primary); }
+.bar-note { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); background: var(--raised); border-radius: 8px; padding: 4px 4px 4px 10px; padding-inline: 10px 4px; }
+.bar-note span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-note .icon-btn { width: 32px; height: 32px; }
+.up-files { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+.up-file { position: relative; flex: none; width: 76px; height: 76px; border-radius: 8px; border: 1px solid var(--border); background: var(--raised); display: grid; place-items: center; overflow: hidden; font-size: 11px; color: var(--muted); text-align: center; padding: 4px; overflow-wrap: anywhere; }
+.up-file img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.up-file button { position: absolute; top: 2px; inset-inline-end: 2px; width: 24px; height: 24px; border-radius: 50%; background: rgba(0, 0, 0, .7); color: #fff; display: grid; place-items: center; }
+.up-file button .ic { width: 14px; height: 14px; }
+.suggest { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+.suggest button { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 18px; background: var(--raised); border: 1px solid var(--border); font-size: 14px; }
+.emo-panel { display: grid; gap: 8px; }
+.emo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 2px; max-height: 200px; overflow-y: auto; }
+.emo-grid button { height: 40px; border-radius: 8px; display: grid; place-items: center; font-size: 22px; }
+.emo-grid button:hover { background: var(--raised); }
+.emo-grid img { width: 28px; height: 28px; object-fit: contain; }
+.chat-empty { flex: 1; display: grid; place-items: center; padding: 24px; }
+.up-prog { height: 4px; background: var(--raised); border-radius: 4px; overflow: hidden; } .up-prog i { display: block; height: 100%; background: var(--accent); }
 </style>
 </head>
 <body>
@@ -356,6 +472,7 @@ const PAGES = [
   { id: "bot-tickets", title: "بوت التكت", group: "التحكم بالبوت", bot: "tickets", icon: "ticket" },
   { id: "bot-broadcast", title: "بوت الإعلانات", group: "التحكم بالبوت", bot: "broadcast", icon: "megaphone", only: "lucifer" },
   { id: "bot-transfers", title: "بوت التحويلات", group: "التحكم بالبوت", bot: "transfers", icon: "wallet", only: "lucifer" },
+  { id: "bot-chat", title: "شات البوت", group: "التحكم بالبوت", icon: "chat", only: "lucifer" },
   { id: "stats-tickets", title: "التذاكر", group: "الإحصائيات", icon: "chart" },
   { id: "stats-reviews", title: "التقييمات", group: "الإحصائيات", icon: "star" },
 ];
@@ -420,6 +537,16 @@ const ICONS = {
   wallet: "M3 7a2 2 0 0 1 2-2h12v4M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16.5 14h.01",
   check: "M5 12.5l4.5 4.5L19 7",
   megaphone: "M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1zM17 9a3.5 3.5 0 0 1 0 6M19.5 6a7.5 7.5 0 0 1 0 12",
+  chat: "M4 5h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-5 4V6a1 1 0 0 1 1-1zM8 10h8M8 13h5",
+  reply: "M10 8L4 13l6 5M4 13h10a6 6 0 0 1 6 6",
+  edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
+  clip: "M20 11.5l-8.3 8.3a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4L15 7.1",
+  smile: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM8.5 14a4.5 4.5 0 0 0 7 0M9 9.5v.01M15 9.5v.01",
+  back: "M5 12h14M13 6l6 6-6 6",
+  hash: "M9 4L7 20M17 4l-2 16M4 9h16M3 15h16",
+  speaker: "M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7",
+  thread: "M5 5h14v9H9l-4 4zM9 9h6",
+  lock: "M7 11V8a5 5 0 0 1 10 0v3M6 11h12v9H6z",
 };
 const icon = (name, cls = "") => s("svg", { class: "ic " + cls, viewBox: "0 0 24 24", "aria-hidden": "true" }, s("path", { d: ICONS[name] }));
 const sk = (w, hgt, style = "") => h("span", { class: "sk", style: `width:${w};height:${hgt};${style}` });
@@ -610,12 +737,15 @@ function draw() {
   document.querySelector('meta[name="theme-color"]').content = SERVERS[store.server].theme;
   if (!store.user) return drawLogin();
   if (store.denied) return drawDenied();
-  const keep = captureFocus();
   const page = PAGES.find((p) => p.id === store.page);
+  chatSync(); document.body.classList.toggle("chat-mode", page.id === "bot-chat");
+  if (page.id === "bot-chat" && chatMounted()) { chatRefresh(); document.title = `${page.title} - ${SERVERS[store.server].name}`; return; }
+  const keep = captureFocus();
   const scroll = window.scrollY;
   $app.replaceChildren(drawTopbar(page), drawDrawer(), h("div", { class: "scrim", onclick: closeDrawer }), drawMain(page), drawSaveBar(page));
   document.title = `${page.title} - ${SERVERS[store.server].name}`;
   window.scrollTo(0, store.focusMain ? 0 : scroll);
+  if (page.id === "bot-chat") { store.focusMain = false; chatRefresh(); return; }
   if (store.focusMain) { store.focusMain = false; $app.querySelector("main").focus({ preventScroll: true }); }
   else restoreFocus(keep);
 }
@@ -717,6 +847,7 @@ function drawMain(page) {
   if (page.id === "customers") body.push(drawCustomers());
   else if (page.id === "bot-broadcast") body.push(drawBroadcast());
   else if (page.id === "bot-transfers") body.push(drawTransfers());
+  else if (page.id === "bot-chat") body.push(drawChat());
   else if (page.bot) body.push(drawControl(page.bot));
   else if (page.id === "stats-tickets") body.push(drawTicketStats());
   else body.push(drawReviewStats());
@@ -1550,6 +1681,416 @@ function trWallets() {
   return [h("div", { class: "field-icon" }, icon("search"), h("input", { class: "input", type: "search", placeholder: "بحث بالاسم أو الآيدي", value: u.q, "data-fk": "trq", "aria-label": "بحث بالمحافظ", oninput: (ev) => { u.q = ev.target.value; render(); } })),
     adjust, table,
     list.length > u.shown ? h("div", { class: "more" }, h("button", { class: "btn ghost", type: "button", onclick: () => { u.shown += 30; render(); } }, `عرض المزيد (باقي ${fmt(list.length - u.shown)})`)) : null];
+}
+// ------------------------------------------------------------------ شات البوت (تكتب وتقرا باسم البوت)
+const CHAT_PAGE = "bot-chat";
+const CHUNK = 900 * 1024;
+const QUICK_EMOJI = ["👍", "❤️", "😂", "🔥", "✅", "❌", "👀", "🙏", "💰", "🎉", "😮", "😢", "💯", "⭐", "👋", "🤝"];
+const chatSubs = { server: null, chUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false };
+function chatUi() {
+  return (ui.chat ||= { ch: null, view: "list", q: "", text: "", files: [], reply: null, edit: null, sel: null, limit: 50,
+    sending: [], fromBottom: 0, emo: false, emoQ: "", map: {}, silent: false, progress: null });
+}
+function chatState() { const st = S(); st.chatDocs ||= {}; return st; }
+function chatAction(name, extra = {}) {
+  return addDoc(subcol("actions"), { bot: "main", name, at: serverTimestamp(), ...extra });
+}
+function chatTeardown() {
+  if (chatSubs.chUnsub) chatSubs.chUnsub(); if (chatSubs.msgUnsub) chatSubs.msgUnsub();
+  clearInterval(chatSubs.timer);
+  Object.assign(chatSubs, { server: null, chUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false });
+}
+function chatSync() {
+  const on = store.user && !store.denied && store.page === CHAT_PAGE && store.server === "lucifer";
+  if (!on) { if (chatSubs.server) chatTeardown(); return; }
+  const st = chatState(); const c = chatUi();
+  if (chatSubs.server !== store.server) {
+    chatTeardown(); chatSubs.server = store.server;
+    chatSubs.chUnsub = onSnapshot(sub("console", "_channels"), (d) => { st.chatCh = d.exists() ? d.data() : false; render(); }, (e) => { st.chatErr = explainError(e); render(); });
+    chatAction("console_channels").catch((e) => toast(explainError(e), 4200));
+    chatSubs.timer = setInterval(() => {
+      if (document.visibilityState === "visible" && chatUi().ch && store.page === CHAT_PAGE) chatAction("console_ping", { channel_id: chatUi().ch }).catch(() => {});
+      chatCheckPending();
+    }, 50000);
+  }
+  if (chatSubs.msgId !== c.ch) {
+    if (chatSubs.msgUnsub) chatSubs.msgUnsub();
+    chatSubs.msgUnsub = null; chatSubs.msgId = c.ch;
+    if (c.ch) {
+      const id = c.ch;
+      chatSubs.msgUnsub = onSnapshot(sub("console", id), (d) => {
+        const data = d.exists() ? d.data() : null; st.chatDocs[id] = data;
+        if (data && data.last_send) chatResult(data.last_send);
+        const upd = data && toDate(data.updated_at); const cu = chatUi();
+        if (upd) cu.sending = cu.sending.filter((p) => !(p.doneAt && upd >= p.doneAt));
+        if (store.page === CHAT_PAGE && chatUi().ch === id) render();
+      }, (e) => { st.chatErr = explainError(e); render(); });
+      chatAction("console_open", { channel_id: id, limit: c.limit }).catch((e) => toast(explainError(e), 4200));
+    }
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  const c = ui.chat;
+  if (document.visibilityState === "visible" && c && c.ch && store.page === CHAT_PAGE) chatAction("console_open", { channel_id: c.ch, limit: c.limit }).catch(() => {});
+});
+function chatResult(res) {
+  const c = chatUi(); const i = c.sending.findIndex((p) => p.nonce === res.nonce);
+  if (res.nonce && c.lastResult === res.nonce) return;
+  c.lastResult = res.nonce;
+  if (i < 0) { if (!res.ok && res.nonce && res.nonce.startsWith("a")) toast(res.error || "ما انعمل", 4200); return; }
+  const p = c.sending[i];
+  if (res.ok && !p.edit) { p.doneAt = toDate(res.at) || new Date(); return; }
+  c.sending.splice(i, 1);
+  if (!res.ok) {
+    toast(res.error || "ما انرسلت", 5000);
+    if (!c.text && p.text) { c.text = p.text; const ta = document.getElementById("chat-ta"); if (ta) ta.value = p.text; }
+  }
+}
+function chatCheckPending() {
+  const c = chatUi(); let changed = false;
+  for (const p of c.sending) if (!p.late && Date.now() - p.at > 45000) { p.late = true; changed = true; }
+  if (changed) render();
+}
+const chatNonce = (k = "s") => k + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+function chatChannel(id) { const d = chatState().chatCh; return d && (d.channels || []).find((x) => x.id === id); }
+function chatOpen(id) {
+  const c = chatUi(); if (c.ch !== id) { c.ch = id; c.limit = 50; c.sel = null; c.reply = null; c.edit = null; c.fromBottom = 0; c.emo = false; }
+  c.view = "conv"; try { localStorage.setItem("chat.ch", id); } catch {}
+  render();
+}
+
+// ---- النص بشكل ديسكورد
+function chatHtml(text, names) {
+  const st = S(); const g = st.guild || {}; const bot = (chatState().chatCh || {}).bot || {}; const stash = [];
+  const keep = (html) => { stash.push(html); return `\u0000${stash.length - 1}\u0000`; };
+  let t = esc(text || "");
+  t = t.replace(/```(?:[\w+-]*\n)?([\s\S]*?)```/g, (_, c) => keep(`<pre><code>${c.replace(/^\n|\n$/g, "")}</code></pre>`));
+  t = t.replace(/`([^`\n]+)`/g, (_, c) => keep(`<code>${c}</code>`));
+  t = t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, label, url) => keep(`<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`));
+  t = t.replace(/(^|[\s(])(https?:\/\/[^\s<]+[^\s<.,:;"')\]])/g, (_, pre, url) => pre + keep(`<a href="${url}" target="_blank" rel="noopener noreferrer" dir="ltr">${url}</a>`));
+  t = t.replace(/&lt;(a?):(\w+):(\d+)&gt;/g, (_, a, n, id) => keep(`<img class="e" alt=":${n}:" title=":${n}:" loading="lazy" src="https://cdn.discordapp.com/emojis/${id}.${a ? "gif" : "webp"}?size=48">`));
+  t = t.replace(/&lt;#(\d+)&gt;/g, (_, id) => { const c = (g.channels || []).find((x) => x.id === id) || chatChannel(id); return keep(`<span class="m" dir="auto"># ${esc(c ? c.name : "روم")}</span>`); });
+  t = t.replace(/&lt;@&amp;(\d+)&gt;/g, (_, id) => { const r = (g.roles || []).find((x) => x.id === id); const col = r && r.color ? roleColor(r.color) : null;
+    return keep(`<span class="m" dir="auto"${col ? ` style="color:${col};background:${col}22"` : ""}>@${esc(r ? r.name : "رتبة")}</span>`); });
+  t = t.replace(/&lt;@!?(\d+)&gt;/g, (_, id) => keep(`<span class="m" dir="auto">@${esc((names && names[id]) || (id === bot.id ? bot.name : "") || chatName(id) || "عضو")}</span>`));
+  t = t.replace(/@(everyone|here)\b/g, (_, w) => keep(`<span class="m">@${w}</span>`));
+  t = t.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, (_, sec, f) => { const d = new Date(+sec * 1000);
+    const txt = f === "R" ? ago(d) : new Intl.DateTimeFormat("ar-IQ-u-nu-latn", { timeZone: TZ, dateStyle: /[dD]/.test(f || "") ? "medium" : "full", timeStyle: /[dD]/.test(f || "") ? undefined : "short" }).format(d);
+    return keep(`<span class="ts">${esc(txt)}</span>`); });
+  t = t.replace(/\|\|([\s\S]+?)\|\|/g, '<span class="sp">$1</span>');
+  t = t.replace(/\*\*\*([\s\S]+?)\*\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]+?)\*\*/g, "<b>$1</b>").replace(/__([\s\S]+?)__/g, "<u>$1</u>")
+    .replace(/~~([\s\S]+?)~~/g, "<s>$1</s>").replace(/(^|[^*\w])\*([^*\n]+)\*/g, "$1<i>$2</i>").replace(/(^|[^_\w])_([^_\n]+)_(?!\w)/g, "$1<i>$2</i>");
+  t = t.split("\n").map((line) => {
+    let m = line.match(/^(#{1,3}) (.+)$/); if (m) return `<span class="h${m[1].length}">${m[2]}</span>`;
+    m = line.match(/^-# (.+)$/); if (m) return `<span class="sub">${m[1]}</span>`;
+    m = line.match(/^&gt; ?(.*)$/); if (m) return `<span class="q">${m[1] || " "}</span>`;
+    return line.replace(/^\s*[-*] /, "• ");
+  }).join("\n").replace(/<\/span>\n(?=<span class="(?:q|h\d)")/g, "</span>").replace(/(<span class="(?:q|h\d)">[^\n]*<\/span>)\n/g, "$1");
+  return t.replace(/\u0000(\d+)\u0000/g, (_, i) => stash[+i]);
+}
+function chatName(id) {
+  const d = chatState().chatDocs[chatUi().ch]; const m = d && (d.messages || []).find((x) => x.uid === id);
+  if (m) return m.name;
+  const cu = (S().customers || []).find((x) => x.id === id); return cu ? cu.display_name || cu.name || cu.username : "";
+}
+const jumbo = (text) => text && text.length < 200 && !/[^\s]/.test(text.replace(/<a?:\w+:\d+>|\p{Extended_Pictographic}|‍|️/gu, ""));
+function rich(tag, cls, text, names) { const el = h(tag, { class: "rich " + cls, dir: "auto" }); el.innerHTML = chatHtml(text, names); return el; }
+function emojiNode(str) {
+  const m = /^<(a?):(\w+):(\d+)>$/.exec(str || "");
+  if (m) return h("img", { class: "e", alt: m[2], src: `https://cdn.discordapp.com/emojis/${m[3]}.${m[1] ? "gif" : "webp"}?size=48`, loading: "lazy" });
+  return h("span", {}, str);
+}
+const fmtSize = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB");
+const chatTime = (d) => (d ? new Intl.DateTimeFormat("ar-IQ-u-nu-latn", { timeZone: TZ, hour: "numeric", minute: "2-digit", hour12: true }).format(d) : "");
+const chatDay = (d) => new Intl.DateTimeFormat("ar-IQ-u-nu-latn", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(d);
+
+// ---- رسالة وحدة
+function chatMsg(m, prev, doc) {
+  const c = chatUi(); const at = toDate(m.at); const bot = (chatState().chatCh || {}).bot || {};
+  const pAt = prev && toDate(prev.at);
+  const cont = prev && !m.reply && !m.system && !prev.system && prev.uid === m.uid && at && pAt && at - pAt < 7 * 60000;
+  const sel = c.sel === m.id;
+  const mentioned = bot.id && (m.text || "").includes(`<@${bot.id}>`);
+  const body = [];
+  if (m.reply) body.push(h("div", { class: "reply-line" }, m.reply.name ? h("b", { style: m.reply.color ? `color:${roleColor(m.reply.color)}` : null }, m.reply.name) : null, h("span", {}, plain(m.reply.text))));
+  if (!cont) body.push(h("div", { class: "hd" }, h("b", { style: m.color ? `color:${roleColor(m.color)}` : null }, m.name), m.bot ? h("span", { class: "tag-bot" }, "BOT") : null,
+    h("time", {}, at ? (dayKey(at) === dayKey(new Date()) ? "اليوم " : fmtDate(at) + " ") + chatTime(at) : "")));
+  if (m.system) body.push(h("div", { class: "sys" }, m.system));
+  if (m.text) { const el = rich("div", "txt" + (jumbo(m.text) ? " jumbo" : ""), m.text, doc.names); if (m.edited) el.append(h("span", { class: "edited" }, "(معدلة)")); body.push(el); }
+  const files = m.files || [];
+  if (files.length) body.push(h("div", { class: "atts" }, files.map((f) => {
+    if (/^image\//.test(f.type) || (/\.(png|jpe?g|gif|webp)$/i.test(f.name) && f.w)) {
+      return h("a", { href: f.url, target: "_blank", rel: "noopener", onclick: (ev) => ev.stopPropagation() },
+        h("img", { class: "att-img" + (f.spoiler ? " spoil" : ""), src: f.url, alt: f.name, loading: "lazy", width: f.w || null, height: f.h || null, onload: chatImgLoaded }));
+    }
+    if (/^video\//.test(f.type)) return h("video", { class: "att-img", src: f.url, controls: true, preload: "metadata", width: f.w || null, height: f.h || null, onclick: (ev) => ev.stopPropagation() });
+    return h("a", { class: "att-file", href: f.url, target: "_blank", rel: "noopener", onclick: (ev) => ev.stopPropagation() }, icon("download", "sm"), h("span", { dir: "auto" }, f.name), h("small", {}, fmtSize(f.size || 0)));
+  })));
+  for (const e of m.embeds || []) {
+    if ((e.type === "image" || e.type === "gifv") && (e.thumb || e.image)) { body.push(h("img", { class: "att-img", src: e.image || e.thumb, loading: "lazy", onload: chatImgLoaded })); continue; }
+    const box = h("div", { class: "emb", style: e.color ? `border-inline-start-color:${roleColor(e.color)}` : null });
+    if (e.thumb) box.append(h("img", { class: "eth", src: e.thumb, loading: "lazy", alt: "" }));
+    if (e.author) box.append(h("div", { class: "ea", dir: "auto" }, e.author_icon ? h("img", { src: e.author_icon, alt: "" }) : null, e.author));
+    if (e.title) { const t = rich("div", "et", e.title, doc.names); box.append(e.url ? h("a", { href: e.url, target: "_blank", rel: "noopener", style: "color:#00a8fc;text-decoration:none", onclick: (ev) => ev.stopPropagation() }, t) : t); }
+    if (e.desc) box.append(rich("div", "txt", e.desc, doc.names));
+    if ((e.fields || []).length) box.append(h("div", { class: "flds" }, e.fields.map((f) => h("div", { class: "fld" + (f.i ? "" : " full") }, rich("b", "", f.n, doc.names), rich("div", "txt", f.v, doc.names)))));
+    if (e.image) box.append(h("img", { class: "ei", src: e.image, loading: "lazy", alt: "", width: e.iw || null, height: e.ih || null, onload: chatImgLoaded }));
+    if (e.footer) box.append(h("div", { class: "ef", dir: "auto" }, e.footer));
+    body.push(box);
+  }
+  for (const stk of m.stickers || []) body.push(h("img", { class: "att-img", style: "width:160px;height:160px", src: stk.url, alt: stk.name, loading: "lazy" }));
+  for (const row of m.buttons || []) body.push(h("div", { class: "dbtns" }, row.items.map((b) => {
+    const kids = [b.emoji ? emojiNode(b.emoji) : null, b.label];
+    if (b.url) return h("a", { class: "dbtn", href: b.url, target: "_blank", rel: "noopener", onclick: (ev) => ev.stopPropagation() }, ...kids);
+    return h("span", { class: `dbtn s${b.style || 2}${b.off ? " off" : ""}`, title: "الأزرار تنضغط من ديسكورد" }, ...kids);
+  })));
+  if ((m.reactions || []).length) body.push(h("div", { class: "reacts" }, m.reactions.map((r) => h("button", { class: "react" + (r.me ? " me" : ""), type: "button",
+    onclick: (ev) => { ev.stopPropagation(); chatDo("console_react", { message_id: m.id, emoji: r.e }); } }, emojiNode(r.e), h("span", { class: "num" }, r.n)))));
+  if (sel) body.push(chatMsgActions(m));
+  return h("div", { class: `msg${cont ? " cont" : ""}${sel ? " sel" : ""}${mentioned ? " mentioned" : ""}`, "data-id": m.id,
+    onclick: (ev) => { if (ev.target.closest("a,button,video,.sp")) return; c.sel = sel ? null : m.id; chatRefresh(); } },
+    cont ? h("div", { class: "gut" }, at ? chatTime(at).replace(/\s?[صمAP]M?$/i, "") : "") : h("img", { class: "av", src: m.avatar, alt: "", loading: "lazy" }),
+    h("div", { class: "mb" }, body));
+}
+function chatMsgActions(m) {
+  const c = chatUi(); const ch = chatChannel(c.ch) || {};
+  const stop = (fn) => (ev) => { ev.stopPropagation(); fn(); };
+  return h("div", { class: "msg-acts" },
+    ch.send !== false ? h("button", { class: "btn", type: "button", onclick: stop(() => { c.reply = { id: m.id, name: m.name, uid: m.uid }; c.edit = null; c.sel = null; chatRefresh(); chatFocus(); }) }, icon("reply", "sm"), "رد") : null,
+    m.mine && !m.system ? h("button", { class: "btn", type: "button", onclick: stop(() => { c.edit = { id: m.id }; c.reply = null; c.sel = null; c.text = m.text || ""; const ta = document.getElementById("chat-ta"); if (ta) ta.value = c.text; chatRefresh(); chatFocus(); }) }, icon("edit", "sm"), "تعديل") : null,
+    m.text ? h("button", { class: "btn", type: "button", onclick: stop(() => copyText(m.text, "انسخ النص")) }, icon("copy", "sm"), "نسخ") : null,
+    h("button", { class: "btn", type: "button", onclick: stop(() => { chatInsert(`@${m.name} `); c.map[`@${m.name}`] = `<@${m.uid}>`; c.sel = null; chatRefresh(); }) }, "@ منشن"),
+    h("button", { class: "btn", type: "button", onclick: stop(() => copyText(m.uid, "انسخ آيدي الشخص")) }, "آيدي"),
+    ["👍", "❤️", "✅", "🔥"].map((e) => h("button", { class: "btn", type: "button", "aria-label": "تفاعل " + e, onclick: stop(() => chatDo("console_react", { message_id: m.id, emoji: e })) }, e)),
+    h("button", { class: "btn", type: "button", onclick: stop(() => chatDo("console_pin", { message_id: m.id })) }, m.pinned ? "إلغاء التثبيت" : "تثبيت"),
+    h("button", { class: "btn danger", type: "button", onclick: stop(() => { if (confirm("تحذف هذي الرسالة من ديسكورد؟")) { c.sel = null; chatDo("console_delete", { message_id: m.id }, "انرسل الحذف"); } }) }, icon("trash", "sm"), "حذف"));
+}
+async function chatDo(name, extra, done) {
+  const c = chatUi();
+  try { await chatAction(name, { channel_id: c.ch, nonce: chatNonce("a"), ...extra }); if (done) toast(done); }
+  catch (e) { toast(explainError(e), 4200); }
+}
+function chatImgLoaded() { const box = document.getElementById("chat-msgs"); if (box && chatUi().fromBottom < 40) box.scrollTop = box.scrollHeight; }
+
+// ---- الإرسال
+function chatInsert(str) {
+  const ta = document.getElementById("chat-ta"); const c = chatUi();
+  if (!ta) { c.text += str; return; }
+  const a = ta.selectionStart ?? ta.value.length, b = ta.selectionEnd ?? a;
+  ta.value = ta.value.slice(0, a) + str + ta.value.slice(b); c.text = ta.value;
+  const pos = a + str.length; ta.focus(); try { ta.setSelectionRange(pos, pos); } catch {}
+}
+function chatFocus() { setTimeout(() => { const ta = document.getElementById("chat-ta"); if (ta && !matchMedia("(pointer: coarse)").matches) ta.focus(); }, 0); }
+function chatAddFiles(list) {
+  const c = chatUi(); const limit = ((chatState().chatCh || {}).upload_limit) || 10 * 1048576;
+  for (const f of list) {
+    if (c.files.length >= 10) { toast("أكثر شي 10 ملفات بالرسالة"); break; }
+    if (f.size > limit) { toast(`«${f.name}» أكبر من ${fmtSize(limit)} (حد ديسكورد بهذا السيرفر)`, 4200); continue; }
+    c.files.push({ file: f, url: /^image\//.test(f.type) ? URL.createObjectURL(f) : null, spoiler: false });
+  }
+  const total = c.files.reduce((n, x) => n + x.file.size, 0);
+  if (total > limit) toast(`مجموع الملفات ${fmtSize(total)}، أكثر من حد ديسكورد ${fmtSize(limit)}`, 4500);
+  chatRefresh();
+}
+async function chatUpload(entries, onProgress) {
+  const specs = []; const total = entries.reduce((n, x) => n + x.file.size, 0) || 1; let done = 0;
+  for (const x of entries) {
+    const id = chatNonce("f"); const buf = new Uint8Array(await x.file.arrayBuffer()); const parts = Math.max(1, Math.ceil(buf.length / CHUNK));
+    for (let i = 0; i < parts; i++) {
+      const chunk = buf.subarray(i * CHUNK, (i + 1) * CHUNK);
+      await setDoc(sub("console_files", `${id}-${i}`), { data: Bytes.fromUint8Array(chunk), at: serverTimestamp() });
+      done += chunk.length; onProgress(done / total);
+    }
+    let name = x.file.name || "image.png"; if (!/\.\w{2,5}$/.test(name)) name += "." + ((x.file.type.split("/")[1] || "bin").replace("jpeg", "jpg"));
+    specs.push({ id, parts, name, spoiler: !!x.spoiler });
+  }
+  return specs;
+}
+function chatExpand(text) {
+  const c = chatUi(); let out = text;
+  for (const [k, v] of Object.entries(c.map).sort((a, b) => b[0].length - a[0].length)) out = out.split(k).join(v);
+  return out;
+}
+async function chatSend() {
+  const c = chatUi(); const ch = c.ch; if (!ch) return;
+  const ta = document.getElementById("chat-ta"); if (ta) c.text = ta.value;
+  const text = chatExpand(c.text.trim());
+  if (c.edit) {
+    if (!text) return toast("الرسالة فارغة");
+    const nonce = chatNonce(); c.sending.push({ nonce, text: c.text, at: Date.now(), edit: true });
+    const id = c.edit.id; c.edit = null; c.text = ""; if (ta) ta.value = ""; chatRefresh();
+    try { await chatAction("console_edit", { channel_id: ch, message_id: id, text, nonce }); } catch (e) { toast(explainError(e), 4200); }
+    return;
+  }
+  if (!text && !c.files.length) return;
+  const files = c.files; const reply = c.reply; const raw = c.text;
+  const nonce = chatNonce(); const pend = { nonce, text: raw, shown: text, files: files.map((x) => x.file.name), at: Date.now() };
+  c.sending.push(pend); c.text = ""; c.files = []; c.reply = null; c.map = {}; c.fromBottom = 0; if (ta) ta.value = "";
+  chatRefresh();
+  try {
+    let specs = [];
+    if (files.length) { c.progress = 0; specs = await chatUpload(files, (p) => { c.progress = p; chatRefresh(); }); c.progress = null; }
+    await chatAction("console_send", { channel_id: ch, text, nonce, files: specs, reply_to: reply ? reply.id : null, silent: c.silent });
+    files.forEach((x) => x.url && URL.revokeObjectURL(x.url));
+  } catch (e) {
+    c.progress = null; c.sending = c.sending.filter((p) => p.nonce !== nonce);
+    if (!c.text) { c.text = raw; c.files = files; c.reply = reply; const t2 = document.getElementById("chat-ta"); if (t2) t2.value = raw; }
+    toast(explainError(e), 4500);
+  }
+  chatRefresh();
+}
+function chatSuggest() {
+  const c = chatUi(); const ta = document.getElementById("chat-ta"); if (!ta) return [];
+  const before = ta.value.slice(0, ta.selectionStart ?? ta.value.length); const m = /(^|\s)([@#:])([^\s@#:]{0,30})$/.exec(before);
+  if (!m) return [];
+  const [, , sign, q] = m; const ql = q.toLowerCase(); const out = []; const seen = new Set();
+  const add = (label, insert, map, img) => { if (seen.has(insert) || out.length >= 12) return; seen.add(insert); out.push({ label, insert, map, img, cut: sign.length + q.length }); };
+  if (sign === "@") {
+    const d = chatState().chatDocs[c.ch] || {};
+    for (const w of ["everyone", "here"]) if (w.startsWith(ql)) add("@" + w, "@" + w);
+    for (const msg of [...(d.messages || [])].reverse()) if (!msg.bot && msg.name.toLowerCase().includes(ql)) add("@" + msg.name, "@" + msg.name, `<@${msg.uid}>`, msg.avatar);
+    for (const [id, n] of Object.entries(d.names || {})) if (n.toLowerCase().includes(ql)) add("@" + n, "@" + n, `<@${id}>`);
+    for (const r of (S().guild || {}).roles || []) if (q && r.name.toLowerCase().includes(ql)) add("@" + r.name, "@" + r.name, `<@&${r.id}>`);
+    for (const cu of S().customers || []) { const n = cu.display_name || cu.name || cu.username; if (q.length >= 2 && n && n.toLowerCase().includes(ql)) add("@" + n, "@" + n, `<@${cu.id}>`); }
+  } else if (sign === "#") {
+    for (const chn of (chatState().chatCh || {}).channels || []) if (chn.name.toLowerCase().includes(ql)) add("#" + chn.name, "#" + chn.name, `<#${chn.id}>`);
+  } else if (q.length >= 2) {
+    for (const e of (chatState().chatCh || {}).emojis || []) if (e.name.toLowerCase().includes(ql)) add(":" + e.name + ":", ":" + e.name + ":", null, `https://cdn.discordapp.com/emojis/${e.id}.${e.a ? "gif" : "webp"}?size=32`);
+  }
+  return out;
+}
+function chatPickSuggest(sg) {
+  const c = chatUi(); const ta = document.getElementById("chat-ta"); if (!ta) return;
+  const pos = ta.selectionStart ?? ta.value.length; const start = pos - sg.cut;
+  ta.value = ta.value.slice(0, start) + sg.insert + " " + ta.value.slice(pos); c.text = ta.value;
+  if (sg.map) c.map[sg.insert] = sg.map;
+  const np = start + sg.insert.length + 1; ta.focus(); try { ta.setSelectionRange(np, np); } catch {}
+  chatRefresh();
+}
+
+// ---- الهيكل (ينرسم مرة، وبعدين يتحدث بمكانه حتى الكيبورد ما يتسكر)
+function drawChat() {
+  const c = chatUi(); const st = chatState();
+  if (!c.ch) { try { const saved = localStorage.getItem("chat.ch"); if (saved) { c.ch = saved; c.view = matchMedia("(min-width: 800px)").matches ? "conv" : "list"; } } catch {} }
+  const ta = h("textarea", { class: "input", id: "chat-ta", rows: 1, dir: "auto", placeholder: "اكتب رسالة...", "aria-label": "الرسالة", enterkeyhint: "send",
+    oninput: (ev) => { c.text = ev.target.value; chatRefreshExtra(); },
+    onclick: () => chatRefreshExtra(),
+    onkeydown: (ev) => { if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing && !matchMedia("(pointer: coarse)").matches) { ev.preventDefault(); chatSend(); }
+      if (ev.key === "Escape") { c.reply = null; c.edit = null; chatRefresh(); } },
+    onpaste: (ev) => { const fs = [...(ev.clipboardData && ev.clipboardData.files || [])]; if (fs.length) { ev.preventDefault(); chatAddFiles(fs); } } });
+  ta.value = c.text;
+  const fileIn = h("input", { type: "file", multiple: true, hidden: true, onchange: (ev) => { chatAddFiles([...ev.target.files]); ev.target.value = ""; } });
+  const msgs = h("div", { class: "msgs", id: "chat-msgs", role: "log", "aria-live": "polite",
+    onscroll: (ev) => { const el = ev.currentTarget; c.fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight; },
+    onclick: (ev) => { const sp = ev.target.closest(".sp"); if (sp) sp.classList.toggle("on"); } });
+  const shell = h("div", { class: "chat", id: "chat", "data-view": c.view, "data-server": store.server },
+    h("aside", { class: "ch-list", id: "chat-list", "aria-label": "الرومات" }),
+    h("section", { class: "conv", "aria-label": "المحادثة" },
+      h("div", { class: "conv-head", id: "chat-head" }),
+      msgs,
+      h("div", { class: "composer", id: "chat-comp" },
+        h("div", { id: "chat-extra", style: "display:grid;gap:8px" }),
+        h("div", { class: "row" },
+          h("button", { class: "icon-btn", type: "button", "aria-label": "إرفاق صورة أو ملف", onclick: () => fileIn.click() }, icon("clip")),
+          h("button", { class: "icon-btn", type: "button", "aria-label": "إيموجي", onclick: () => { c.emo = !c.emo; chatRefreshExtra(); } }, icon("smile")),
+          ta, fileIn,
+          h("button", { class: "icon-btn send", type: "button", "aria-label": "إرسال", onclick: () => chatSend() }, icon("send"))))));
+  return shell;
+}
+function chatShellDrop() { const el = document.getElementById("chat"); if (el) el.remove(); }
+function chatMounted() { const el = document.getElementById("chat"); return el && el.dataset.server === store.server ? el : null; }
+function chatRefresh() { chatRefreshList(); chatRefreshHead(); chatRefreshMsgs(); chatRefreshExtra(); const el = chatMounted(); if (el) el.dataset.view = chatUi().view; }
+function chatRefreshList() {
+  const box = document.getElementById("chat-list"); if (!box) return;
+  const c = chatUi(); const d = chatState().chatCh;
+  if (d === undefined) { box.replaceChildren(...[1, 2, 3, 4, 5, 6].map(() => sk("100%", "36px", "margin:4px 0"))); return; }
+  if (d === false || !(d.channels || []).length) { box.replaceChildren(h("div", { class: "empty" }, icon("bot"), h("h2", {}, "الرومات بعدها ما وصلت"),
+    h("p", {}, "البوت الأساسي لازم يكون شغال بالنسخة الجديدة. ارفع main.py الجديد وسوي Restart."),
+    h("button", { class: "btn", type: "button", onclick: () => chatAction("console_channels").then(() => toast("انطلب من البوت")).catch((e) => toast(explainError(e))) }, icon("refresh"), "اطلب الرومات"))); return; }
+  const keep = document.activeElement && document.activeElement.id === "chat-q";
+  const q = c.q.trim().toLowerCase(); const rows = (d.channels || []).filter((x) => !q || x.name.toLowerCase().includes(q));
+  const kids = [h("div", { class: "ch-bot" }, d.bot && d.bot.avatar ? h("img", { src: d.bot.avatar, alt: "" }) : null, h("div", {}, h("b", {}, (d.bot && d.bot.name) || "البوت"), h("span", {}, "تكتب باسم البوت"))),
+    h("div", { class: "field-icon" }, icon("search"), h("input", { class: "input", id: "chat-q", type: "search", placeholder: "دور روم", value: c.q, "aria-label": "دور روم",
+      oninput: (ev) => { c.q = ev.target.value; chatRefreshList(); } }))];
+  let cat = null;
+  for (const x of rows) {
+    if (x.cat_name !== cat) { cat = x.cat_name; if (cat) kids.push(h("div", { class: "ch-cat" }, cat)); }
+    kids.push(h("button", { class: "ch-btn" + (x.type === "thread" ? " thread" : ""), type: "button", "aria-current": String(x.id === c.ch), onclick: () => chatOpen(x.id) },
+      icon(x.voice ? "speaker" : x.type === "thread" ? "thread" : x.type === "news" ? "megaphone" : "hash", "sm"), h("span", { class: "nm", dir: "auto" }, x.name),
+      x.send ? null : icon("lock", "lock")));
+  }
+  if (!rows.length) kids.push(h("p", { class: "f-help", style: "padding:8px" }, "ماكو روم بهذا الاسم."));
+  box.replaceChildren(...kids);
+  if (keep) { const inp = document.getElementById("chat-q"); inp.focus(); try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch {} }
+}
+function chatRefreshHead() {
+  const box = document.getElementById("chat-head"); if (!box) return;
+  const c = chatUi(); const ch = chatChannel(c.ch); const stt = S().status.main; const hb = stt && toDate(stt.heartbeat);
+  const on = hb && Date.now() - hb.getTime() < 25 * 60000;
+  box.replaceChildren(
+    h("button", { class: "icon-btn bare back-btn", type: "button", "aria-label": "رجوع للرومات", onclick: () => { c.view = "list"; chatRefresh(); } }, icon("back")),
+    h("div", { class: "t" }, h("b", { dir: "auto" }, icon(ch && ch.voice ? "speaker" : "hash", "sm"), ch ? ch.name : c.ch ? "روم" : "اختار روم"),
+      h("span", { dir: "auto" }, !on && stt !== undefined ? "⚠️ البوت الأساسي مو شغال هسه، الرسائل ما تنرسل" : ch && !ch.send ? "البوت ما يكدر يكتب هنا (يقرا بس)" : (ch && ch.topic) || "تكتب وتقرا باسم البوت")),
+    c.ch ? h("button", { class: "icon-btn bare", type: "button", "aria-label": "تحديث", onclick: () => chatAction("console_open", { channel_id: c.ch, limit: c.limit }).then(() => toast("انطلب تحديث")).catch((e) => toast(explainError(e))) }, icon("refresh")) : null);
+}
+function chatRefreshMsgs() {
+  const box = document.getElementById("chat-msgs"); if (!box) return;
+  const c = chatUi(); const d = c.ch ? chatState().chatDocs[c.ch] : null;
+  const fromBottom = c.fromBottom;
+  const kids = [];
+  if (!c.ch) kids.push(h("div", { class: "chat-empty" }, emptyState("hash", "اختار روم", "اختار روم من القائمة حتى تشوف رسائله وتكتب بيه باسم البوت.")));
+  else if (d === undefined || (d && !d.messages && !d.error)) kids.push(h("div", { style: "padding:16px;display:grid;gap:16px" }, [1, 2, 3, 4].map(() => h("div", { style: "display:flex;gap:12px" }, sk("40px", "40px", "border-radius:50%"), h("div", { style: "flex:1;display:grid;gap:6px" }, sk("30%", "14px"), sk("80%", "14px"))))));
+  else if (d && d.error) kids.push(h("div", { style: "padding:16px" }, h("div", { class: "notice bad" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أفتح الروم"), d.error))));
+  else if (d === null) kids.push(h("div", { class: "chat-empty" }, h("p", { class: "muted" }, "ننتظر البوت يجيب الرسائل... إذا طولت، تأكد البوت الأساسي شغال.")));
+  else {
+    const list = d.messages || [];
+    if (d.has_more) kids.push(h("div", { class: "older" }, h("button", { class: "btn ghost", type: "button", onclick: () => {
+      c.limit = Math.min(300, c.limit + 50); chatAction("console_open", { channel_id: c.ch, limit: c.limit }).then(() => toast("ديجيب رسائل أقدم")).catch((e) => toast(explainError(e))); } }, icon("up", "sm"), "رسائل أقدم")));
+    if (!list.length) kids.push(h("div", { class: "chat-empty" }, h("p", { class: "muted" }, "ماكو رسائل بهذا الروم بعد.")));
+    let prev = null; let lastDay = null;
+    for (const m of list) {
+      const at = toDate(m.at); const day = at ? dayKey(at) : null;
+      if (day && day !== lastDay) { kids.push(h("div", { class: "day-sep" }, chatDay(at))); lastDay = day; prev = null; }
+      kids.push(chatMsg(m, prev, d)); prev = m;
+    }
+  }
+  for (const p of c.sending.filter((x) => !x.edit)) {
+    const bot = (chatState().chatCh || {}).bot || {};
+    kids.push(h("div", { class: "msg pend" }, h("img", { class: "av", src: bot.avatar || "", alt: "" }),
+      h("div", { class: "mb" }, h("div", { class: "hd" }, h("b", {}, bot.name || "البوت"), h("time", {}, "جاري الإرسال...")),
+        p.shown ? rich("div", "txt", p.shown, d && d.names) : null,
+        p.files.length ? h("div", { class: "f-help" }, "📎 " + p.files.join("، ")) : null,
+        p.late ? h("div", { class: "note" }, "ما وصل رد من البوت. يمكن طافي، تأكد منه.") : null)));
+  }
+  box.replaceChildren(...kids);
+  box.scrollTop = Math.max(0, box.scrollHeight - box.clientHeight - fromBottom);
+}
+function chatRefreshExtra() {
+  const box = document.getElementById("chat-extra"); if (!box) return;
+  const c = chatUi(); const kids = [];
+  if (c.progress != null) kids.push(h("div", { class: "up-prog", role: "progressbar", "aria-valuenow": Math.round(c.progress * 100) }, h("i", { style: `width:${Math.round(c.progress * 100)}%` })));
+  if (c.reply) kids.push(h("div", { class: "bar-note" }, h("span", {}, "رد على ", h("b", {}, c.reply.name)),
+    h("button", { class: "icon-btn bare", type: "button", "aria-label": "إلغاء الرد", onclick: () => { c.reply = null; chatRefreshExtra(); } }, icon("x", "sm"))));
+  if (c.edit) kids.push(h("div", { class: "bar-note" }, h("span", {}, "تعديل رسالة البوت"),
+    h("button", { class: "icon-btn bare", type: "button", "aria-label": "إلغاء التعديل", onclick: () => { c.edit = null; c.text = ""; const ta = document.getElementById("chat-ta"); if (ta) ta.value = ""; chatRefreshExtra(); } }, icon("x", "sm"))));
+  if (c.files.length) kids.push(h("div", { class: "up-files" }, c.files.map((x, i) => h("div", { class: "up-file", title: x.file.name },
+    x.url ? h("img", { src: x.url, alt: x.file.name }) : x.file.name,
+    h("button", { type: "button", "aria-label": "شيل " + x.file.name, onclick: () => { if (x.url) URL.revokeObjectURL(x.url); c.files.splice(i, 1); chatRefreshExtra(); } }, icon("x"))))));
+  const sg = chatSuggest();
+  if (sg.length) kids.push(h("div", { class: "suggest" }, sg.map((x) => h("button", { type: "button", onmousedown: (ev) => ev.preventDefault(), onclick: () => chatPickSuggest(x) },
+    x.img ? h("img", { src: x.img, alt: "", style: "width:20px;height:20px;border-radius:50%" }) : null, h("span", { dir: "auto" }, x.label)))));
+  if (c.emo) {
+    const emojis = ((chatState().chatCh || {}).emojis || []).filter((e) => !c.emoQ || e.name.toLowerCase().includes(c.emoQ.toLowerCase()));
+    kids.push(h("div", { class: "emo-panel" },
+      h("input", { class: "input", id: "chat-emoq", type: "search", placeholder: "دور إيموجي", value: c.emoQ, "aria-label": "دور إيموجي",
+        oninput: (ev) => { c.emoQ = ev.target.value; chatRefreshExtra(); const i = document.getElementById("chat-emoq"); i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch {} } }),
+      h("div", { class: "emo-grid" },
+        c.emoQ ? null : QUICK_EMOJI.map((e) => h("button", { type: "button", "aria-label": e, onclick: () => chatInsert(e) }, e)),
+        emojis.slice(0, 300).map((e) => h("button", { type: "button", title: ":" + e.name + ":", "aria-label": e.name, onclick: () => chatInsert(`:${e.name}: `) },
+          h("img", { src: `https://cdn.discordapp.com/emojis/${e.id}.${e.a ? "gif" : "webp"}?size=48`, alt: e.name, loading: "lazy" }))))));
+  }
+  box.replaceChildren(...kids);
 }
 // ------------------------------------------------------------------ التشغيل
 window.addEventListener("hashchange", () => {
