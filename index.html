@@ -387,7 +387,7 @@ body.chat-mode .savebar { display: none; }
 .reply-line::before { content: "↰"; color: var(--faint); }
 .reply-line b { font-weight: 600; flex: none; }
 .reply-line span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.att-img { display: block; max-width: min(100%, 360px); max-height: 360px; width: auto; height: auto; border-radius: 8px; background: var(--raised); object-fit: contain; }
+.att-img { display: block; max-width: min(100%, 360px); max-height: 360px; height: auto; border-radius: 8px; background: var(--raised); object-fit: contain; }
 .att-img.spoil { filter: blur(28px); }
 .att-file { display: flex; align-items: center; gap: 10px; max-width: 400px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: #00a8fc; text-decoration: none; font-size: 14px; }
 .att-file small { color: var(--faint); margin-inline-start: auto; }
@@ -399,7 +399,7 @@ body.chat-mode .savebar { display: none; }
 .emb .flds { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
 .emb .fld { min-width: 0; } .emb .fld.full { grid-column: 1 / -1; }
 .emb .fld b { display: block; font-size: 13px; }
-.emb .ei { max-width: 100%; max-height: 300px; width: auto; height: auto; border-radius: 6px; object-fit: contain; justify-self: start; }
+.emb .ei { max-width: 100%; max-height: 300px; height: auto; border-radius: 6px; object-fit: contain; justify-self: start; }
 .emb .eth { float: inline-end; width: 72px; height: 72px; object-fit: cover; border-radius: 6px; margin-inline-start: 10px; }
 .emb .ef { color: var(--faint); font-size: 12px; }
 .dbtns { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1707,9 +1707,9 @@ function chatAction(name, extra = {}) {
   return addDoc(subcol("actions"), { bot: "main", name, at: serverTimestamp(), ...extra });
 }
 function chatTeardown() {
-  if (chatSubs.chUnsub) chatSubs.chUnsub(); if (chatSubs.msgUnsub) chatSubs.msgUnsub(); if (chatSubs.mUnsub) chatSubs.mUnsub();
+  if (chatSubs.chUnsub) chatSubs.chUnsub(); if (chatSubs.msgUnsub) chatSubs.msgUnsub(); if (chatSubs.mUnsub) chatSubs.mUnsub(); if (chatSubs.memUnsub) chatSubs.memUnsub();
   clearInterval(chatSubs.timer);
-  Object.assign(chatSubs, { server: null, chUnsub: null, mUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false });
+  Object.assign(chatSubs, { server: null, chUnsub: null, mUnsub: null, memUnsub: null, msgUnsub: null, msgId: null, timer: null, asked: false });
 }
 function chatSync() {
   const on = store.user && !store.denied && store.page === CHAT_PAGE && store.server === "lucifer";
@@ -1718,6 +1718,7 @@ function chatSync() {
   if (chatSubs.server !== store.server) {
     chatTeardown(); chatSubs.server = store.server;
     chatSubs.chUnsub = onSnapshot(sub("console", "_channels"), (d) => { st.chatCh = d.exists() ? d.data() : false; render(); }, (e) => { st.chatErr = explainError(e); render(); });
+    chatSubs.memUnsub = onSnapshot(sub("console", "_members"), (d) => { st.chatMembers = d.exists() ? d.data() : null; if (store.page === CHAT_PAGE) chatRefreshExtra(); }, () => {});
     chatSubs.mUnsub = onSnapshot(sub("console", MENTIONS), (d) => { st.chatMentions = d.exists() ? d.data() : { items: [] }; if (chatUi().ch === MENTIONS) chatMarkSeen(); render(); }, () => {});
     chatAction("console_channels").catch((e) => toast(explainError(e), 4200));
     chatSubs.timer = setInterval(() => {
@@ -1961,10 +1962,13 @@ function chatSuggest() {
   const before = ta.value.slice(0, ta.selectionStart ?? ta.value.length); const m = /(^|\s)([@#:])([^\s@#:]{0,30})$/.exec(before);
   if (!m) return [];
   const [, , sign, q] = m; const ql = q.toLowerCase(); const out = []; const seen = new Set();
-  const add = (label, insert, map, img) => { if (seen.has(insert) || out.length >= 12) return; seen.add(insert); out.push({ label, insert, map, img, cut: sign.length + q.length }); };
+  const add = (label, insert, map, img, sub) => { if (seen.has(insert) || out.length >= 20) return; seen.add(insert); out.push({ label, insert, map, img, sub, cut: sign.length + q.length }); };
   if (sign === "@") {
     const d = chatState().chatDocs[c.ch] || {};
     for (const w of ["everyone", "here"]) if (w.startsWith(ql)) add("@" + w, "@" + w);
+    chatAskMembers(q);
+    const mem = chatState().chatMembers;
+    if (mem && String(mem.q || "").toLowerCase() === ql) for (const u of mem.results || []) add("@" + u.name, "@" + u.name, `<@${u.id}>`, u.avatar, u.user !== u.name ? u.user : "");
     for (const msg of [...(d.messages || [])].reverse()) if (!msg.bot && msg.name.toLowerCase().includes(ql)) add("@" + msg.name, "@" + msg.name, `<@${msg.uid}>`, msg.avatar);
     for (const [id, n] of Object.entries(d.names || {})) if (n.toLowerCase().includes(ql)) add("@" + n, "@" + n, `<@${id}>`);
     for (const r of (S().guild || {}).roles || []) if (q && r.name.toLowerCase().includes(ql)) add("@" + r.name, "@" + r.name, `<@&${r.id}>`);
@@ -1975,6 +1979,11 @@ function chatSuggest() {
     for (const e of (chatState().chatCh || {}).emojis || []) if (e.name.toLowerCase().includes(ql)) add(":" + e.name + ":", ":" + e.name + ":", null, `https://cdn.discordapp.com/emojis/${e.id}.${e.a ? "gif" : "webp"}?size=32`);
   }
   return out;
+}
+function chatAskMembers(q) {
+  const c = chatUi(); if (c.memQ === q) return; c.memQ = q;
+  clearTimeout(c.memTimer);
+  c.memTimer = setTimeout(() => chatAction("console_members", { q }).catch(() => {}), 250);
 }
 function chatPickSuggest(sg) {
   const c = chatUi(); const ta = document.getElementById("chat-ta"); if (!ta) return;
@@ -2127,7 +2136,8 @@ function chatRefreshExtra() {
     h("button", { type: "button", "aria-label": "شيل " + x.file.name, onclick: () => { if (x.url) URL.revokeObjectURL(x.url); c.files.splice(i, 1); chatRefreshExtra(); } }, icon("x"))))));
   const sg = chatSuggest();
   if (sg.length) kids.push(h("div", { class: "suggest" }, sg.map((x) => h("button", { type: "button", onmousedown: (ev) => ev.preventDefault(), onclick: () => chatPickSuggest(x) },
-    x.img ? h("img", { src: x.img, alt: "", style: "width:20px;height:20px;border-radius:50%" }) : null, h("span", { dir: "auto" }, x.label)))));
+    x.img ? h("img", { src: x.img, alt: "", style: "width:20px;height:20px;border-radius:50%" }) : null, h("span", { dir: "auto" }, x.label),
+    x.sub ? h("small", { dir: "ltr", style: "color:var(--faint);font-size:12px" }, x.sub) : null))));
   if (c.emo) {
     const emojis = ((chatState().chatCh || {}).emojis || []).filter((e) => !c.emoQ || e.name.toLowerCase().includes(c.emoQ.toLowerCase()));
     kids.push(h("div", { class: "emo-panel" },
