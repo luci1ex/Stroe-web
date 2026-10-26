@@ -14,7 +14,7 @@
 :root {
   --bg: #0A0A0B; --card: #141416; --raised: #1E1E22; --hover: #25252B; --border: #2C2C33; --control: #6B6B78;
   --text: #F5F5F4; --muted: #A1A1AA; --faint: #8E8E98;
-  --accent: #D8B45A; --primary: #D8B45A; --on-primary: #111108; --wash: rgba(216, 180, 90, .12); --ring: #D8B45A;
+  --accent: #E6D724; --primary: #E6D724; --on-primary: #111108; --wash: rgba(230, 215, 36, .10); --ring: #E6D724;
   --series-1: #c98500; --series-2: #3987e5;
   --good: #22C55E; --warn: #F59E0B; --bad: #F87171;
   --font: "Inter", "Noto Sans Arabic", system-ui, "Segoe UI", Tahoma, sans-serif;
@@ -124,7 +124,7 @@ textarea.input { resize: vertical; line-height: 1.7; display: block; field-sizin
 body.side-open .side { transform: none; visibility: visible; transition: transform var(--slow) var(--ease-out); }
 body.side-open .scrim { opacity: 1; pointer-events: auto; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 16px; }
-.brand .mark { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg,#f3d98a,#b88a2d); color: var(--on-primary); display: grid; place-items: center; font-weight: 700; font-size: 18px; flex: none; }
+.brand .mark { width: 40px; height: 40px; border-radius: 12px; background: var(--primary); color: var(--on-primary); display: grid; place-items: center; font-weight: 700; font-size: 18px; flex: none; }
 .brand .name { font-weight: 700; font-size: 18px; line-height: 1.2; }
 .brand .sub { color: var(--muted); font-size: 13px; }
 .nav-group { color: var(--faint); font-size: 12px; font-weight: 600; padding: 16px 12px 4px; }
@@ -474,8 +474,6 @@ const PAGES = [
   { id: "bot-chat", title: "شات البوت", group: "التحكم بالبوت", icon: "chat", only: "lucifer" },
   { id: "stats-tickets", title: "التذاكر", group: "الإحصائيات", icon: "chart" },
   { id: "stats-reviews", title: "التقييمات", group: "الإحصائيات", icon: "star" },
-  { id: "store-orders", title: "طلبات المتجر", group: "إدارة المتجر", icon: "receipt" },
-  { id: "audit-center", title: "مركز التدقيق", group: "الإدارة والأمان", icon: "shield" },
 ];
 const BOT_KEYS = ["main", "tickets", "broadcast", "transfers", "security"];
 const BOT_LABELS = { main: "البوت الأساسي", tickets: "بوت التكت", broadcast: "بوت الإعلانات", transfers: "بوت التحويلات", security: "بوت الحماية" };
@@ -603,7 +601,7 @@ function S() {
   return (data[store.server] ||= {
     guild: null, customers: null, customersInfo: null, schema: {}, settings: {}, status: {}, draft: {}, base: {},
     tickets: {}, openTickets: null, reviews: {}, reviewsInfo: null, error: null, images: {}, bcInfo: undefined, bcHistory: undefined,
-    trReq: undefined, trWd: undefined, trWallets: undefined, trThumbs: {}, auditActions: undefined, storeOrders: undefined, auditError: null, storeOrdersError: null,
+    trReq: undefined, trWd: undefined, trWallets: undefined, trThumbs: {},
   });
 }
 const root = () => doc(db, "dash", store.server);
@@ -639,10 +637,6 @@ function watch() {
     unsubs.push(onSnapshot(query(subcol("tr_requests"), orderBy("created_at", "desc"), limit(400)), guard((q) => { st.trReq = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), orderBy("created_at", "desc"), limit(300)), guard((q) => { st.trWd = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(subcol("tr_wallets"), guard((q) => { st.trWallets = q.docs.map((x) => ({ id: x.id, ...x.data() })); trRender(); }), fail));
-    const auditFail = (e) => { if (store.server !== srv) return; st.auditError = explainError(e); st.auditActions = null; render(); };
-    const ordersFail = (e) => { if (store.server !== srv) return; st.storeOrdersError = explainError(e); st.storeOrders = null; render(); };
-    unsubs.push(onSnapshot(query(subcol("actions"), orderBy("at", "desc"), limit(250)), guard((q) => { st.auditError = null; st.auditActions = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "audit-center") render(); }), auditFail));
-    unsubs.push(onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), guard((q) => { st.storeOrdersError = null; st.storeOrders = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "store-orders") render(); }), ordersFail));
   }
   for (const bot of BOT_KEYS) {
     unsubs.push(onSnapshot(sub("schema", bot), guard((d) => { st.schema[bot] = d.exists() ? d.data() : false; rebase(bot); render(); }), fail));
@@ -857,8 +851,6 @@ function drawMain(page) {
   else if (page.id === "bot-chat") body.push(drawChat());
   else if (page.bot) body.push(drawControl(page.bot));
   else if (page.id === "stats-tickets") body.push(drawTicketStats());
-  else if (page.id === "audit-center") body.push(drawAuditCenter());
-  else if (page.id === "store-orders") body.push(drawStoreOrders());
   else body.push(drawReviewStats());
   return h("main", { tabindex: -1 }, body.flat());
 }
@@ -1282,55 +1274,6 @@ function drawTicketStats() {
         h("tbody", {}, sorted.slice(0, ui.ticketsShown).map((t) => { const [cls, text] = TICKET_STATE(t); return h("tr", {}, h("td", { dir: "auto" }, t.label), h("td", { class: "ltr clip", title: t.opener }, t.opener), h("td", {}, h("span", { class: "state " + cls }, h("i"), text)), h("td", { class: "n num" }, fmtDateTime(t.created))); })))),
       sorted.length > ui.ticketsShown ? h("div", { class: "more" }, h("button", { class: "btn ghost", onclick: () => { ui.ticketsShown += 50; render(); } }, `عرض المزيد (باقي ${fmt(sorted.length - ui.ticketsShown)})`)) : null)];
 }
-
-// ------------------------------------------------------------------ طلبات المتجر: قراءة فقط من orders؛ ما يغيّر السجلات المالية من الواجهة.
-function drawStoreOrders() {
-  const st = S();
-  if (store.server !== "lucifer") return emptyState("receipt", "طلبات المتجر غير متاحة", "هذه الصفحة مخصصة لمتجر Lucifer Exchange.");
-  if (st.storeOrdersError) return [h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "تعذر تحميل طلبات المتجر"), st.storeOrdersError, h("div", { style: "margin-top:10px" }, h("button", { class: "btn", onclick: () => { st.storeOrders = undefined; st.storeOrdersError = null; watch(); render(); } }, "إعادة المحاولة"))))];
-  if (!st.storeOrders) return statsSkeleton();
-  const all = st.storeOrders;
-  const q = String(ui.storeOrdersQuery || "").trim().toLowerCase();
-  const rows = all.filter((o) => [o.id, o.orderId, o.buyerName, o.buyerId, o.buyerUid, o.ticketNumber, o.section, o.createdBy].some(v => String(v || "").toLowerCase().includes(q)));
-  const sum = (key) => rows.reduce((n, o) => n + (Number(o[key]) || 0), 0);
-  const date = (o) => fmtDateTime(toDate(o.createdAt || o.created_at));
-  const sectionName = (o) => String(o.section || o.product || "—");
-  return [
-    h("section", { class: "card card-pad", style: "background:linear-gradient(135deg,rgba(230,215,36,.10),transparent 55%),var(--card)" },
-      h("div", { class: "badge" }, "سجل الطلبات الموحد"), h("h2", { style: "font-size:22px;margin-top:8px" }, "طلبات المتجر والأرباح"),
-      h("p", { class: "muted", style: "margin-top:6px" }, "قراءة من مجموعة orders المستخدمة من دفتر المتجر وبوت التكت. الأرقام تعتمد على الحقول المسجلة فعلياً، وليست كشفاً محاسبياً مدققاً.")),
-    h("div", { class: "kpis" }, kpi(fmt(rows.length), "عدد الطلبات", "lead"), kpi(sum("sell").toLocaleString("en-US", {maximumFractionDigits:2}), "إجمالي المبيعات", "good"), kpi(sum("cost").toLocaleString("en-US", {maximumFractionDigits:2}), "إجمالي التكلفة"), kpi(sum("profit").toLocaleString("en-US", {maximumFractionDigits:2}), "الربح المسجل", sum("profit") < 0 ? "bad" : "good")),
-    h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "سجل الطلبات"), h("button", { class: "btn ghost", onclick: () => downloadCsv("store-orders", ["orderId","section","buyerName","buyerId","ticketNumber","cost","sell","profit","createdBy","createdAt"], rows.map(o => [o.orderId || o.id, sectionName(o), o.buyerName, o.buyerId || o.buyerUid, o.ticketNumber, o.cost, o.sell, o.profit, o.createdBy, date(o)])) }, icon("download"), "تنزيل CSV")),
-      h("div", { class: "card-pad" }, h("label", { class: "f" }, h("span", { class: "f-label" }, "بحث بالطلب أو الزبون أو التكت"), h("input", { class: "input", type: "search", placeholder: "اسم الزبون، آيدي، رقم التكت، القسم…", value: ui.storeOrdersQuery || "", oninput: (e) => { ui.storeOrdersQuery = e.target.value; render(); }, "data-fk": "store-orders-query" }))),
-      rows.length ? h("div", { class: "table-wrap" }, h("table", { class: "t stackable" }, h("thead", {}, h("tr", {}, h("th", {}, "القسم / الطلب"), h("th", {}, "الزبون"), h("th", { class: "n" }, "البيع"), h("th", { class: "n" }, "التكلفة"), h("th", { class: "n" }, "الربح"), h("th", {}, "التاريخ"))), h("tbody", {}, rows.map(o => h("tr", {}, h("td", {}, h("b", {}, sectionName(o)), h("div", { class: "muted" }, String(o.orderId || o.id).slice(0,18))), h("td", {}, String(o.buyerName || o.buyerId || o.buyerUid || "—"), o.ticketNumber ? h("div", { class: "muted" }, String(o.ticketNumber)) : null), h("td", { class: "n num" }, Number(o.sell || 0).toLocaleString("en-US", {maximumFractionDigits:2})), h("td", { class: "n num" }, Number(o.cost || 0).toLocaleString("en-US", {maximumFractionDigits:2})), h("td", { class: "n num" }, Number(o.profit ?? ((Number(o.sell)||0)-(Number(o.cost)||0))).toLocaleString("en-US", {maximumFractionDigits:2})), h("td", { class: "num" }, date(o))))))) : emptyState("search", "ماكو طلبات مطابقة", "جرّب تغيير البحث أو تحقق من صلاحية قراءة orders في قواعد Firestore."))
-  ];
-}
-
-// ------------------------------------------------------------------ مركز التدقيق: يعرض أحداث actions المسجلة فعلياً، ولا ينشئ سجلات مالية وهمية.
-function drawAuditCenter() {
-  const st = S();
-  if (store.server !== "lucifer") return emptyState("shield", "مركز التدقيق غير متاح", "هذه الصفحة مفعّلة حالياً لسيرفر Lucifer Exchange فقط.");
-  if (st.auditError) return [h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "تعذر تحميل سجل التدقيق"), st.auditError, h("div", { style: "margin-top:10px" }, h("button", { class: "btn", onclick: () => { st.auditActions = undefined; st.auditError = null; watch(); render(); } }, "إعادة المحاولة"))))];
-  if (!st.auditActions) return statsSkeleton();
-  const rows = st.auditActions;
-  const q = String((ui.auditQuery || "")).trim().toLowerCase();
-  const filtered = rows.filter((r) => [r.name, r.bot, r.by, r.id, r.target, r.reason, r.ref, r.currency, r.amount].some((v) => String(v || "").toLowerCase().includes(q)));
-  const financial = rows.filter((r) => /withdraw|receipt|wallet|transfer|swap|approve|reject|balance|deposit/i.test(String(r.name || "")));
-  const when = (r) => fmtDateTime(toDate(r.at));
-  const kind = (r) => ({ transfers: "التحويلات", main: "البوت الأساسي", tickets: "التكتات", security: "الحماية", broadcast: "الإعلانات" }[r.bot] || r.bot || "النظام");
-  return [
-    h("section", { class: "card card-pad", style: "background:linear-gradient(135deg,rgba(230,215,36,.10),transparent 55%),var(--card)" },
-      h("div", { style: "display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap" },
-        h("div", { style: "flex:1;min-width:220px;display:grid;gap:6px" }, h("div", { class: "badge" }, "مركز الإدارة والأمان"), h("h2", { style: "font-size:22px" }, "سجل التدقيق المركزي"), h("p", { class: "muted" }, "عرض مباشر للأحداث المحفوظة في dash/lucifer/actions. هذه الصفحة لا تستبدل سجل دفتر الأستاذ المالي.")),
-        h("button", { class: "btn", onclick: () => downloadCsv("audit", ["وقت الحدث","القسم","الإجراء","المنفذ","المعرف"], filtered.map(r => [when(r),kind(r),r.name,r.by,r.id])) }, icon("download"), "تنزيل CSV"))),
-    h("div", { class: "kpis" }, kpi(fmt(rows.length), "أحداث محمّلة", "lead", "آخر 250 حدثاً"), kpi(fmt(financial.length), "أحداث تبدو مالية", financial.length ? "warn" : "", "حسب اسم الإجراء المسجل"), kpi(fmt(filtered.length), "نتائج البحث", "good")),
-    h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "الأحداث الأخيرة"), h("span", { class: "muted", style: "font-size:13px" }, "تحديث مباشر")),
-      h("div", { class: "card-pad" }, h("label", { class: "f" }, h("span", { class: "f-label" }, "بحث بالسجل"), h("input", { class: "input", type: "search", placeholder: "اسم الإجراء، البوت، المنفذ أو المعرف", value: ui.auditQuery || "", oninput: (e) => { ui.auditQuery = e.target.value; render(); }, "data-fk": "audit-query" }))),
-      filtered.length ? h("div", { class: "table-wrap" }, h("table", { class: "t stackable" }, h("thead", {}, h("tr", {}, h("th", {}, "الإجراء"), h("th", {}, "القسم / المنفذ"), h("th", {}, "القيمة"), h("th", {}, "الوقت"), h("th", {}, "المعرف"))), h("tbody", {}, filtered.map(r => h("tr", {}, h("td", { dir: "auto" }, h("b", {}, String(r.name || "حدث بدون اسم")), r.reason ? h("div", { class: "muted" }, String(r.reason)) : null), h("td", {}, kind(r), r.by ? h("div", { class: "muted" }, String(r.by)) : null), h("td", { class: "num" }, r.amount != null ? `${trAmt(r.amount)} ${r.currency || ""}` : "—", r.balance_before != null || r.balance_after != null ? h("div", { class: "muted" }, `${r.balance_before ?? "—"} ← ${r.balance_after ?? "—"}`) : null), h("td", { class: "num" }, when(r)), h("td", {}, h("button", { class: "copy-id", onclick: () => copyText(r.ref || r.id, "تم نسخ المرجع") }, String(r.ref || r.id).slice(0, 16)))))))) : emptyState("search", "ماكو أحداث مطابقة", "غيّر كلمات البحث أو انتظر تسجيل أحداث جديدة.")),
-    h("div", { class: "notice" }, icon("info"), h("div", {}, h("b", {}, "مهم قبل الاعتماد المالي"), "هذا العرض يقرأ الأحداث التي ترسلها البوتات إلى مجموعة actions فقط. حتى يصير تدقيقاً مالياً كاملاً، يجب أن تسجل البوتات كل تغيير رصيد وسعر وحالة وصل/سحب مع المبلغ والعملة والرصيد قبل/بعد ورقم العملية، وأن تمنع قواعد الخادم تعديل السجلات بعد إنشائها."))
-  ];
-}
-
 function drawReviewStats() {
   const st = S(); const range = ui.range; const rows = st.reviews[range];
   if (!rows) { loadReviews(range); return statsSkeleton(); }
