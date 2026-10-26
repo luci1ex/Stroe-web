@@ -603,7 +603,7 @@ function S() {
   return (data[store.server] ||= {
     guild: null, customers: null, customersInfo: null, schema: {}, settings: {}, status: {}, draft: {}, base: {},
     tickets: {}, openTickets: null, reviews: {}, reviewsInfo: null, error: null, images: {}, bcInfo: undefined, bcHistory: undefined,
-    trReq: undefined, trWd: undefined, trWallets: undefined, trThumbs: {}, auditActions: undefined, storeOrders: undefined,
+    trReq: undefined, trWd: undefined, trWallets: undefined, trThumbs: {}, auditActions: undefined, storeOrders: undefined, auditError: null, storeOrdersError: null,
   });
 }
 const root = () => doc(db, "dash", store.server);
@@ -639,8 +639,10 @@ function watch() {
     unsubs.push(onSnapshot(query(subcol("tr_requests"), orderBy("created_at", "desc"), limit(400)), guard((q) => { st.trReq = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), orderBy("created_at", "desc"), limit(300)), guard((q) => { st.trWd = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(subcol("tr_wallets"), guard((q) => { st.trWallets = q.docs.map((x) => ({ id: x.id, ...x.data() })); trRender(); }), fail));
-    unsubs.push(onSnapshot(query(subcol("actions"), orderBy("at", "desc"), limit(250)), guard((q) => { st.auditActions = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "audit-center") render(); }), fail));
-    unsubs.push(onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), guard((q) => { st.storeOrders = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "store-orders") render(); }), fail));
+    const auditFail = (e) => { if (store.server !== srv) return; st.auditError = explainError(e); st.auditActions = null; render(); };
+    const ordersFail = (e) => { if (store.server !== srv) return; st.storeOrdersError = explainError(e); st.storeOrders = null; render(); };
+    unsubs.push(onSnapshot(query(subcol("actions"), orderBy("at", "desc"), limit(250)), guard((q) => { st.auditError = null; st.auditActions = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "audit-center") render(); }), auditFail));
+    unsubs.push(onSnapshot(query(collection(db, "orders"), orderBy("createdAt", "desc"), limit(500)), guard((q) => { st.storeOrdersError = null; st.storeOrders = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "store-orders") render(); }), ordersFail));
   }
   for (const bot of BOT_KEYS) {
     unsubs.push(onSnapshot(sub("schema", bot), guard((d) => { st.schema[bot] = d.exists() ? d.data() : false; rebase(bot); render(); }), fail));
@@ -1285,6 +1287,7 @@ function drawTicketStats() {
 function drawStoreOrders() {
   const st = S();
   if (store.server !== "lucifer") return emptyState("receipt", "طلبات المتجر غير متاحة", "هذه الصفحة مخصصة لمتجر Lucifer Exchange.");
+  if (st.storeOrdersError) return [h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "تعذر تحميل طلبات المتجر"), st.storeOrdersError, h("div", { style: "margin-top:10px" }, h("button", { class: "btn", onclick: () => { st.storeOrders = undefined; st.storeOrdersError = null; watch(); render(); } }, "إعادة المحاولة"))))];
   if (!st.storeOrders) return statsSkeleton();
   const all = st.storeOrders;
   const q = String(ui.storeOrdersQuery || "").trim().toLowerCase();
@@ -1307,6 +1310,7 @@ function drawStoreOrders() {
 function drawAuditCenter() {
   const st = S();
   if (store.server !== "lucifer") return emptyState("shield", "مركز التدقيق غير متاح", "هذه الصفحة مفعّلة حالياً لسيرفر Lucifer Exchange فقط.");
+  if (st.auditError) return [h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "تعذر تحميل سجل التدقيق"), st.auditError, h("div", { style: "margin-top:10px" }, h("button", { class: "btn", onclick: () => { st.auditActions = undefined; st.auditError = null; watch(); render(); } }, "إعادة المحاولة"))))];
   if (!st.auditActions) return statsSkeleton();
   const rows = st.auditActions;
   const q = String((ui.auditQuery || "")).trim().toLowerCase();
