@@ -438,47 +438,6 @@ body.chat-mode .savebar { display: none; }
 .emo-grid img { width: 28px; height: 28px; object-fit: contain; }
 .chat-empty { flex: 1; display: grid; place-items: center; padding: 24px; }
 .up-prog { height: 4px; background: var(--raised); border-radius: 4px; overflow: hidden; } .up-prog i { display: block; height: 100%; background: var(--accent); }
-
-/* ------------------------------------------------------------------ تحسينات التصميم والإحصائيات */
-:root { --r-card: 18px; --r-ctl: 12px; --series-1: #D9B72D; --series-2: #6E9CF5; }
-body { background-image: radial-gradient(ellipse at 90% 0%, rgba(217,183,45,.055), transparent 34rem); }
-.card { box-shadow: 0 8px 24px rgba(0,0,0,.10); transition: border-color var(--fast), transform var(--fast), box-shadow var(--fast); }
-.card:hover { border-color: color-mix(in srgb, var(--accent) 26%, var(--border)); }
-.card-head { padding-top: 18px; }
-main { gap: 20px; }
-@media (min-width: 1024px) { main > * { max-width: 1120px; } }
-.kpis { gap: 14px; }
-.kpi { min-height: 116px; padding: 18px 18px 16px; padding-inline-start: 24px; background: linear-gradient(145deg, color-mix(in srgb, var(--card) 92%, var(--accent)), var(--card) 62%); overflow: hidden; }
-.kpi::before { inset-block: 18px; inset-inline-start: 11px; width: 4px; }
-.kpi .l { font-size: 13px; letter-spacing: .01em; }
-.kpi .v { font-size: clamp(24px, 3vw, 32px); letter-spacing: -.025em; }
-.kpi.lead .v { font-size: clamp(29px, 3.5vw, 38px); }
-.kpi .s { line-height: 1.45; }
-.chart { padding: 12px 18px 18px; }
-.chart svg { max-height: 270px; }
-.legend { padding-inline: 18px; }
-.cols { gap: 18px; }
-.chips { padding-block: 4px; }
-.chip { background: color-mix(in srgb, var(--card) 85%, transparent); }
-.stats-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 4px 2px 2px; }
-.stats-intro .stats-copy { display: grid; gap: 5px; }
-.stats-intro h2 { font-size: clamp(22px, 3vw, 28px); line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
-.stats-intro p { color: var(--muted); font-size: 14px; line-height: 1.65; max-width: 62ch; }
-.stats-intro .stats-mark { width: 44px; height: 44px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); background: var(--wash); color: var(--accent); border-radius: 14px; display: grid; place-items: center; flex: none; }
-.stats-intro .stats-mark .ic { width: 22px; height: 22px; }
-@media (max-width: 480px) {
-  main { padding: 14px 12px 110px; gap: 14px; }
-  .kpis { gap: 9px; }
-  .kpi { min-height: 104px; padding: 14px 12px; padding-inline-start: 18px; }
-  .kpi::before { inset-inline-start: 7px; }
-  .kpi .l { font-size: 12px; }
-  .kpi .v { font-size: 25px; }
-  .kpi.lead .v { font-size: 29px; }
-  .stats-intro h2 { font-size: 22px; }
-  .stats-intro p { font-size: 13px; }
-  .stats-intro .stats-mark { width: 40px; height: 40px; }
-}
-
 </style>
 </head>
 <body>
@@ -507,6 +466,7 @@ const SERVERS = {
 };
 const PAGES = [
   { id: "customers", title: "الزبائن", icon: "users" },
+  { id: "orders", title: "الطلبات والأرباح", icon: "receipt", only: "lucifer" },
   { id: "bot-main", title: "البوت الأساسي", group: "التحكم بالبوت", bot: "main", icon: "bot" },
   { id: "bot-tickets", title: "بوت التكت", group: "التحكم بالبوت", bot: "tickets", icon: "ticket" },
   { id: "bot-broadcast", title: "بوت الإعلانات", group: "التحكم بالبوت", bot: "broadcast", icon: "megaphone", only: "lucifer" },
@@ -574,6 +534,7 @@ const ICONS = {
   inbox: "M4 13l3-8h10l3 8v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1zM4 13h5l1 2h4l1-2h5",
   send: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z",
   stop: "M6 6h12v12H6z",
+  receipt: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3",
   wallet: "M3 7a2 2 0 0 1 2-2h12v4M3 7v10a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16.5 14h.01",
   check: "M5 12.5l4.5 4.5L19 7",
   megaphone: "M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1zM17 9a3.5 3.5 0 0 1 0 6M19.5 6a7.5 7.5 0 0 1 0 12",
@@ -678,6 +639,10 @@ function watch() {
     unsubs.push(onSnapshot(query(subcol("tr_requests"), orderBy("created_at", "desc"), limit(400)), guard((q) => { st.trReq = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), orderBy("created_at", "desc"), limit(300)), guard((q) => { st.trWd = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(subcol("tr_wallets"), guard((q) => { st.trWallets = q.docs.map((x) => ({ id: x.id, ...x.data() })); trRender(); }), fail));
+    unsubs.push(onSnapshot(sub("info", "transfers_audit"), guard((d) => { st.trAudit = d.exists() ? d.data() : null; trRender(); }), fail));
+    const ordRender = () => { if (store.page === "orders") render(); };
+    unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
+    unsubs.push(onSnapshot(subcol("expenses"), guard((q) => { st.expenses = q.docs.map((x) => ({ id: x.id, ...x.data() })); ordRender(); }), fail));
   }
   for (const bot of BOT_KEYS) {
     unsubs.push(onSnapshot(sub("schema", bot), guard((d) => { st.schema[bot] = d.exists() ? d.data() : false; rebase(bot); render(); }), fail));
@@ -887,6 +852,7 @@ function drawMain(page) {
   const st = S(); const body = [];
   if (st.error) body.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أجيب البيانات"), st.error)));
   if (page.id === "customers") body.push(drawCustomers());
+  else if (page.id === "orders") body.push(drawOrders());
   else if (page.id === "bot-broadcast") body.push(drawBroadcast());
   else if (page.id === "bot-transfers") body.push(drawTransfers());
   else if (page.id === "bot-chat") body.push(drawChat());
@@ -1203,11 +1169,6 @@ function refreshSaveBar() {
 }
 
 // ------------------------------------------------------------------ الإحصائيات
-function statsIntro(title, description, iconName) {
-  return h("div", { class: "stats-intro" },
-    h("div", { class: "stats-copy" }, h("h2", {}, title), h("p", {}, description)),
-    h("div", { class: "stats-mark", "aria-hidden": "true" }, icon(iconName)));
-}
 function rangeChips() {
   return h("div", { class: "chips", role: "group", "aria-label": "الفترة" }, RANGES.map((r) => h("button", { class: "chip", "aria-pressed": String(ui.range === r.id), onclick: () => { ui.range = r.id; ui.ticketsShown = 20; render(); } }, r.label)));
 }
@@ -1290,7 +1251,7 @@ function drawTicketStats() {
   const done = rows.filter((t) => t.completed), closed = rows.filter((t) => t.status === "closed" && !t.completed), deleted = rows.filter((t) => t.status === "deleted"), open = rows.filter((t) => t.status === "open");
   const times = rows.filter((t) => t.closed && t.created).map((t) => t.closed - t.created).sort((a, b) => a - b);
   const median = times.length ? times[Math.floor(times.length / 2)] : null;
-  if (!rows.length && !st.openTickets) return [statsIntro("إحصائيات التذاكر", "تابع حجم العمل، حالات الإغلاق، وأداء التكتات حسب الفترة.", "chart"), rangeChips(), emptyState("inbox", "ماكو تذاكر بهالفترة", "الإحصائيات تبدي من يوم اشتغل بوت التكت. جرب فترة أطول.",
+  if (!rows.length && !st.openTickets) return [rangeChips(), emptyState("inbox", "ماكو تذاكر بهالفترة", "الإحصائيات تبدي من يوم اشتغل بوت التكت. جرب فترة أطول.",
     range !== "all" ? h("button", { class: "btn", onclick: () => { ui.range = "all"; render(); } }, "عرض كل الفترات") : null)];
   const { list, step } = buckets(range, rows.map((t) => t.created).filter(Boolean));
   const opened = list.map(() => 0), finished = list.map(() => 0);
@@ -1304,9 +1265,9 @@ function drawTicketStats() {
   const sorted = [...rows].sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "ar") : x - y) * sort.dir; });
   const th = (key, label, cls) => h("th", { class: cls || "", scope: "col", "aria-sort": sort.key === key ? (sort.dir > 0 ? "ascending" : "descending") : null },
     h("button", { onclick: () => { ui.sort = { key, dir: sort.key === key ? -sort.dir : key === "created" ? -1 : 1 }; render(); } }, label, icon(sort.key === key ? (sort.dir > 0 ? "up" : "downarrow") : "sort", "sm")));
-  return [statsIntro("إحصائيات التذاكر", "نظرة مرتبة على عدد التذاكر، الإنجاز، وقت الإغلاق، وأداء الأقسام والموظفين.", "chart"), rangeChips(),
+  return [rangeChips(),
     h("div", { class: "kpis" }, kpi(fmt(rows.length), "تذكرة انفتحت بالفترة", "lead"), kpi(fmt(st.openTickets ?? open.length), "مفتوحة هسه", "warn"),
-      kpi(fmt(done.length), "اكتملت", "good", ended ? `${Math.round((done.length / ended) * 100)}% من اللي انتهت` : null), kpi(fmt(closed.length), "انغلقت بدون إكمال"),
+      kpi(fmt(done.length), "اكتملت (dn)", "good", ended ? `${Math.round((done.length / ended) * 100)}% من اللي انتهت` : null), kpi(fmt(closed.length), "انغلقت بدون إكمال"),
       kpi(fmt(deleted.length), "انحذفت", deleted.length ? "bad" : ""), kpi(median == null ? "—" : span(median), "الوقت المعتاد للإغلاق")),
     columnChart("tickets", step === 1 ? "التذاكر كل يوم" : step === 7 ? "التذاكر كل أسبوع" : "التذاكر كل شهر", list, [{ name: "انفتحت", color: "var(--series-1)", values: opened }, { name: "اكتملت", color: "var(--series-2)", values: finished }]),
     h("div", { class: "cols" }, barCard("حسب القسم", "عدد التذاكر، وبجنبه كم وحدة اكتملت.", withDone(bySection)),
@@ -1324,13 +1285,13 @@ function drawReviewStats() {
   const st = S(); const range = ui.range; const rows = st.reviews[range];
   if (!rows) { loadReviews(range); return statsSkeleton(); }
   const total = st.reviewsInfo && st.reviewsInfo.total; const people = new Set(rows.map((r) => r.user_id)).size;
-  if (!rows.length && !total) return [statsIntro("إحصائيات التقييمات", "تابع تفاعل الزبائن وتقييماتهم عبر الفترات المختلفة.", "star"), rangeChips(), emptyState("star", "ماكو تقييمات مسجلة بعد", "أول ما البوت الأساسي يشتغل ويا ملف panel.py يعد تقييمات الروم القديمة ويسجل الجديدة.")];
+  if (!rows.length && !total) return [rangeChips(), emptyState("star", "ماكو تقييمات مسجلة بعد", "أول ما البوت الأساسي يشتغل ويا ملف panel.py يعد تقييمات الروم القديمة ويسجل الجديدة.")];
   const { list, step } = buckets(range, rows.map((r) => r.at)); const counts = list.map(() => 0);
   for (const r of rows) { const i = place(list, r.at); if (i >= 0) counts[i]++; }
   const days = RANGES.find((x) => x.id === range).days || Math.max(1, list.length * step);
   const top = tally(rows, (r) => r.user_id, (r) => r.display_name || r.username || r.user_id).slice(0, 10);
   const partial = range === "all" && total && rows.length < total;
-  return [statsIntro("إحصائيات التقييمات", "راقب نمو التقييمات، عدد الزبائن المشاركين، والنشاط بمرور الوقت.", "star"), rangeChips(),
+  return [rangeChips(),
     h("div", { class: "kpis" }, kpi(fmt(total ?? rows.length), "مجموع التقييمات من البداية", "lead"), kpi(fmt(rows.length), range === "all" ? "تقييم محفوظ بتفاصيله" : "تقييم بهالفترة", "good"),
       kpi(fmt(people), "زبون قيّم"), kpi((rows.length / days).toFixed(1), "تقييم باليوم تقريباً")),
     partial ? h("div", { class: "notice" }, icon("alert"), h("div", {}, `التفاصيل تحت محسوبة من آخر ${fmt(rows.length)} تقييم. الأقدم محسوب بالمجموع بس.`)) : null,
@@ -1601,6 +1562,7 @@ function trOverview() {
     kpi(fmt(today.length), "انقبلت آخر 24 ساعة", "good"),
     kpi(fmt(dups), "مكررة أو مشبوهة", dups ? "bad" : ""),
     kpi(fmt(holders), "زبائن عندهم رصيد"))];
+  const audit = trAuditCard(); if (audit) out.push(audit);
   const curs = trCurrencies();
   if (curs.length) {
     const approved30 = {}; const wd30 = {};
@@ -2190,6 +2152,283 @@ function chatRefreshExtra() {
           h("img", { src: `https://cdn.discordapp.com/emojis/${e.id}.${e.a ? "gif" : "webp"}?size=48`, alt: e.name, loading: "lazy" }))))));
   }
   box.replaceChildren(...kids);
+}
+// ------------------------------------------------------------------ الطلبات والأرباح
+const ORD_TABS = [{ id: "overview", label: "نظرة عامة" }, { id: "list", label: "الطلبات" }, { id: "expenses", label: "المصروفات" }];
+const ORD_STATE = { delivered: ["done", "تم التسليم"], pending: ["open", "معلق"], cancelled: ["deleted", "ملغي"], refunded: ["deleted", "مسترجع"] };
+const ORD_RANGES = [{ id: "today", label: "اليوم" }, { id: "7", label: "7 أيام" }, { id: "30", label: "30 يوم" }, { id: "month", label: "هذا الشهر" },
+  { id: "prev", label: "الشهر الماضي" }, { id: "all", label: "الكل" }];
+const ordUi = () => (ui.ord ||= { tab: "overview", range: "30", q: "", status: "all", shown: 40, edit: {}, add: null, exp: null });
+const money2 = (v) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
+let ordMemo = null;
+function ordSettings() {
+  const st = S(); const vals = st.base.tickets || null;
+  if (ordMemo && ordMemo.orders === st.orders && ordMemo.vals === vals) return ordMemo.out;
+  const sections = [...((vals && vals.SECTIONS) || [])];
+  const currencies = [...((vals && vals.ORDER_CURRENCIES) || [])];
+  const seenS = new Set(sections.map((x) => x.id)); const seenC = new Set(currencies.map((x) => x.key));
+  for (const o of S().orders || []) {
+    if (o.section && !seenS.has(o.section)) { seenS.add(o.section); sections.push({ id: o.section, label: o.section_label || o.section }); }
+    if (o.currency && !seenC.has(o.currency)) { seenC.add(o.currency); currencies.push({ key: o.currency, label: o.currency_label || o.currency, usd_rate: o.usd_rate || 0 }); }
+  }
+  const out = { sections, currencies };
+  ordMemo = { orders: st.orders, vals, out };
+  return out;
+}
+const ordCur = (key) => ordSettings().currencies.find((c) => c.key === key) || { key, label: key || "—", usd_rate: 0 };
+const ordSec = (id) => ordSettings().sections.find((c) => c.id === id) || { id, label: id || "—" };
+function startOfDay(d) { return new Date(dayKey(d) + "T00:00:00+03:00"); }
+function ordRange(id) {
+  const now = new Date(); const today = startOfDay(now).getTime(); const end = today + 864e5;
+  const ym = dayKey(now).slice(0, 7); const monthStart = new Date(ym + "-01T00:00:00+03:00").getTime();
+  if (id === "today") return [today, end];
+  if (id === "7") return [today - 6 * 864e5, end];
+  if (id === "30") return [today - 29 * 864e5, end];
+  if (id === "month") return [monthStart, end];
+  if (id === "prev") { const p = new Date(monthStart - 864e5); return [new Date(dayKey(p).slice(0, 7) + "-01T00:00:00+03:00").getTime(), monthStart]; }
+  return [0, end];
+}
+const ordAt = (o) => toDate(o.delivered_at) || toDate(o.created_at);
+const expAt = (e) => (e.date ? new Date(e.date + "T12:00:00+03:00") : toDate(e.at));
+function inRange(d, r) { return d && d.getTime() >= r[0] && d.getTime() < r[1]; }
+function toUsd(amount, rate) { return rate > 0 ? amount / rate : null; }
+async function ordAction(name, extra, done) {
+  try { await addDoc(subcol("actions"), { bot: "tickets", name, at: serverTimestamp(), by: store.user.email, ...extra }); if (done) toast(done, 3200); return true; }
+  catch (e) { toast(explainError(e), 4500); return false; }
+}
+function ordOnline() { const stt = S().status.tickets; const hb = stt && toDate(stt.heartbeat); return !!(hb && Date.now() - hb.getTime() < 25 * 60000); }
+
+function drawOrders() {
+  const st = S(); const u = ordUi();
+  const tabs = h("div", { class: "chips", role: "tablist", "aria-label": "أقسام الطلبات" }, ORD_TABS.map((t) => {
+    const n = t.id === "list" ? (st.orders || []).filter((o) => o.status === "pending").length : 0;
+    return h("button", { class: "chip", role: "tab", "aria-selected": String(u.tab === t.id), "aria-pressed": String(u.tab === t.id), onclick: () => { u.tab = t.id; render(); } }, t.label, n ? ` (${fmt(n)} معلق)` : "");
+  }));
+  if (st.orders === undefined || st.expenses === undefined) return [tabs, statsSkeleton().slice(1)];
+  const body = u.tab === "list" ? ordList() : u.tab === "expenses" ? ordExpenses() : ordOverview();
+  return [tabs, ...body];
+}
+function ordRangeChips() {
+  const u = ordUi();
+  return h("div", { class: "chips", role: "group", "aria-label": "الفترة" }, ORD_RANGES.map((r) => h("button", { class: "chip", type: "button", "aria-pressed": String(u.range === r.id),
+    onclick: () => { u.range = r.id; u.shown = 40; render(); } }, r.label)));
+}
+function ordSummary(rangeId) {
+  const r = ordRange(rangeId); const orders = (S().orders || []).filter((o) => inRange(ordAt(o), r));
+  const delivered = orders.filter((o) => (o.status || "delivered") === "delivered");
+  const pending = orders.filter((o) => o.status === "pending"); const refunded = orders.filter((o) => o.status === "refunded");
+  const expenses = (S().expenses || []).filter((e) => !e.deleted && inRange(expAt(e), r));
+  const byCur = new Map(); const get = (k) => { if (!byCur.has(k)) byCur.set(k, { key: k, orders: 0, sell: 0, cost: 0, profit: 0, exp: 0 }); return byCur.get(k); };
+  const usd = { sell: 0, cost: 0, profit: 0, exp: 0, missing: 0 };
+  for (const o of delivered) {
+    const c = get(o.currency || "—"); c.orders++; c.sell += +o.sell || 0; c.cost += +o.cost || 0; c.profit += +o.profit || 0;
+    const rate = +o.usd_rate || +ordCur(o.currency).usd_rate || 0;
+    if (rate > 0) { usd.sell += (+o.sell || 0) / rate; usd.cost += (+o.cost || 0) / rate; usd.profit += (+o.profit || 0) / rate; } else usd.missing++;
+  }
+  for (const e of expenses) {
+    const c = get(e.currency || "—"); c.exp += +e.amount || 0;
+    const rate = +ordCur(e.currency).usd_rate || 0;
+    if (rate > 0) usd.exp += (+e.amount || 0) / rate; else usd.missing++;
+  }
+  return { r, orders, delivered, pending, refunded, expenses, byCur: [...byCur.values()], usd };
+}
+function ordBuckets(rangeId, dates) {
+  const [from0, to] = ordRange(rangeId); let from = from0;
+  if (!from) from = dates.length ? startOfDay(new Date(Math.min(...dates.map((d) => d.getTime())))).getTime() : to - 30 * 864e5;
+  const days = Math.max(1, Math.round((to - from) / 864e5)); const step = days <= 31 ? 1 : days <= 120 ? 7 : 30; const out = [];
+  const dm = (d) => new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric", month: "numeric" }).format(d);
+  for (let t = to; t > from; t -= step * 864e5) { const a = Math.max(from, t - step * 864e5); out.unshift({ from: a, to: t, label: step === 1 ? dm(new Date(a)) : `${dm(new Date(a))} – ${dm(new Date(t - 1))}`, short: dm(new Date(a)) }); }
+  return { list: out, step };
+}
+function ordOverview() {
+  const u = ordUi(); const sm = ordSummary(u.range); const usd = sm.usd;
+  const net = usd.profit - usd.exp;
+  const out = [ordRangeChips()];
+  if (!(S().orders || []).length) {
+    out.push(emptyState("chart", "ماكو طلبات بعد", "أول ما الطاقم يسجل طلب من التذكرة («تسجيل التسليم» أو أمر «طلب») يطلع هنا. وطلبات دفتر المتجر القديمة تنتقل لحالها أول ما يشتغل بوت التكت الجديد."));
+    return out;
+  }
+  out.push(h("div", { class: "kpis" },
+    kpi(`$${money2(usd.profit)}`, "الربح من الطلبات", "lead", `من ${fmt(sm.delivered.length)} طلب مسلّم`),
+    kpi(`$${money2(usd.sell)}`, "المبيعات"), kpi(`$${money2(usd.cost)}`, "الكلفة"),
+    kpi(`$${money2(usd.exp)}`, "المصروفات", usd.exp ? "bad" : ""),
+    kpi(`$${money2(net)}`, "صافي الربح", net >= 0 ? "good" : "bad", "الربح ناقص المصروفات"),
+    kpi(fmt(sm.pending.length), "طلبات معلقة", sm.pending.length ? "warn" : "", sm.refunded.length ? `${fmt(sm.refunded.length)} مسترجع` : null)));
+  if (usd.missing) out.push(h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, `${fmt(usd.missing)} طلب أو مصروف ما محسوب بالدولار`),
+    "عملتهم ما إلها سعر دولار. حطه من إعدادات بوت التكت ← «عملات الطلبات»، أو شوف أرقامهم بجدول العملات تحت.")));
+  const { list, step } = ordBuckets(u.range, sm.delivered.map(ordAt).filter(Boolean));
+  const profit = list.map(() => 0), sales = list.map(() => 0);
+  for (const o of sm.delivered) { const i = place(list, ordAt(o)); const rate = +o.usd_rate || +ordCur(o.currency).usd_rate || 0; if (i >= 0 && rate > 0) { profit[i] += Math.max(0, (+o.profit || 0) / rate); sales[i] += (+o.sell || 0) / rate; } }
+  out.push(columnChart("orders", step === 1 ? "المبيعات والربح كل يوم ($)" : step === 7 ? "المبيعات والربح كل أسبوع ($)" : "المبيعات والربح كل شهر ($)", list,
+    [{ name: "المبيعات", color: "var(--series-2)", values: sales.map((v) => Math.round(v)) }, { name: "الربح", color: "var(--series-1)", values: profit.map((v) => Math.round(v)) }]));
+  if (sm.byCur.length) out.push(h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "حسب العملة")),
+    h("p", { class: "card-note" }, "كل عملة بأرقامها الأصلية، بدون تحويل."),
+    h("div", { class: "table-wrap", style: "padding-top:8px" }, h("table", { class: "t" },
+      h("thead", {}, h("tr", {}, h("th", {}, "العملة"), h("th", { class: "n" }, "طلبات"), h("th", { class: "n" }, "المبيعات"), h("th", { class: "n" }, "الكلفة"), h("th", { class: "n" }, "الربح"), h("th", { class: "n" }, "المصروفات"), h("th", { class: "n" }, "الصافي"))),
+      h("tbody", {}, sm.byCur.map((c) => h("tr", {}, h("td", { dir: "auto" }, ordCur(c.key).label), h("td", { class: "n num" }, fmt(c.orders)), h("td", { class: "n num" }, money2(c.sell)),
+        h("td", { class: "n num" }, money2(c.cost)), h("td", { class: "n num" }, money2(c.profit)), h("td", { class: "n num" }, money2(c.exp)), h("td", { class: "n num" }, money2(c.profit - c.exp)))))))));
+  const group = (keyFn, labelFn) => {
+    const m = new Map();
+    for (const o of sm.delivered) { const k = keyFn(o); if (!k) continue; const e = m.get(k) || { label: labelFn(o), n: 0, profit: 0, sell: 0 }; const rate = +o.usd_rate || +ordCur(o.currency).usd_rate || 0;
+      e.n++; if (rate > 0) { e.profit += (+o.profit || 0) / rate; e.sell += (+o.sell || 0) / rate; } m.set(k, e); }
+    return [...m.values()].sort((a, b) => b.profit - a.profit);
+  };
+  const bySec = group((o) => o.section, (o) => ordSec(o.section).label || o.section_label);
+  const byStaff = group((o) => o.staff_id || o.staff_name, (o) => o.staff_name || o.staff_id);
+  out.push(h("div", { class: "cols" },
+    barCard("الربح حسب القسم ($)", "طول الشريط = الربح، وبجنبه عدد الطلبات. الأكثر مبيعاً مو دائماً الأكثر ربحاً.",
+      bySec.map((x) => ({ label: x.label, value: Math.max(0, Math.round(x.profit)), note: `${fmt(x.n)} طلب` }))),
+    barCard("حسب الموظف ($)", "الربح من الطلبات اللي سجلها كل واحد.",
+      byStaff.map((x) => ({ label: x.label, value: Math.max(0, Math.round(x.profit)), note: `${fmt(x.n)} طلب` })))));
+  return out;
+}
+function ordMatches(o, q) {
+  if (!q) return true;
+  return [o.num, o.buyer_name, o.buyer_id, o.ticket_name, o.note, o.staff_name, o.section_label].some((v) => String(v ?? "").toLowerCase().includes(q));
+}
+function ordList() {
+  const u = ordUi(); const all = S().orders || []; const r = ordRange(u.range); const q = u.q.trim().toLowerCase();
+  const inR = all.filter((o) => u.range === "all" || inRange(ordAt(o), r));
+  const rows = inR.filter((o) => (u.status === "all" || (o.status || "delivered") === u.status) && ordMatches(o, q));
+  const counts = (k) => inR.filter((o) => (o.status || "delivered") === k).length;
+  return [ordRangeChips(),
+    h("div", { class: "toolbar" },
+      h("div", { class: "chips", style: "flex:1" }, [["all", "الكل"], ...Object.entries(ORD_STATE).map(([k, v]) => [k, v[1]])].map(([k, label]) =>
+        h("button", { class: "chip", type: "button", "aria-pressed": String(u.status === k), onclick: () => { u.status = k; u.shown = 40; render(); } }, label, ` (${fmt(k === "all" ? inR.length : counts(k))})`)))),
+    h("div", { class: "toolbar" },
+      h("div", { class: "field-icon", style: "flex:1;min-width:200px" }, icon("search"), h("input", { class: "input", type: "search", placeholder: "بحث برقم الطلب أو الزبون أو التكت أو الموظف", value: u.q, "data-fk": "ordq", "aria-label": "بحث",
+        oninput: (ev) => { u.q = ev.target.value; render(); } })),
+      h("button", { class: "btn primary", type: "button", onclick: () => { u.add = u.add ? null : { status: "delivered", section: (ordSettings().sections[0] || {}).id || "", currency: (ordSettings().currencies[0] || {}).key || "" }; render(); } }, icon(u.add ? "x" : "plus"), u.add ? "إلغاء" : "طلب جديد"),
+      h("button", { class: "btn ghost", type: "button", onclick: () => downloadCsv("orders", ["num", "date", "status", "section", "currency", "cost", "sell", "profit", "customer", "ticket", "staff", "note"],
+        rows.map((o) => [o.num, fmtDateTime(ordAt(o)), (ORD_STATE[o.status || "delivered"] || [])[1], ordSec(o.section).label, ordCur(o.currency).label, o.cost, o.sell, o.profit, o.buyer_name, o.ticket_name, o.staff_name, o.note])) }, icon("download"), "تنزيل")),
+    u.add ? ordAddForm() : null,
+    rows.length ? h("div", { class: "items" }, rows.slice(0, u.shown).map(ordItem)) : emptyState("inbox", "ماكو طلبات هنا", "جرب فترة أو فلتر ثاني."),
+    rows.length > u.shown ? h("div", { class: "more" }, h("button", { class: "btn ghost", type: "button", onclick: () => { u.shown += 40; render(); } }, `عرض المزيد (باقي ${fmt(rows.length - u.shown)})`)) : null];
+}
+function selectEl(value, options, onchange, fk, label) {
+  return h("select", { class: "input", "data-fk": fk, "aria-label": label, onchange: (ev) => onchange(ev.target.value) },
+    options.map(([v, l]) => h("option", { value: v, selected: v === value ? true : null }, l)));
+}
+function fieldBox(label, control, help) { return h("label", { class: "field" }, h("span", { class: "f-label" }, label), control, help ? h("span", { class: "f-help" }, help) : null); }
+function numInput(value, onInput, fk, label, ph) {
+  return h("input", { class: "input num", inputmode: "decimal", value: value ?? "", "data-fk": fk, "aria-label": label, placeholder: ph || "", oninput: (ev) => onInput(ev.target.value) });
+}
+const toNum = (v) => { const n = Number(String(v ?? "").replace(/[,،\s]/g, "")); return Number.isFinite(n) ? n : NaN; };
+function ordItem(o) {
+  const u = ordUi(); const key = "ord/" + o.num; const st = o.status || "delivered"; const [cls, label] = ORD_STATE[st] || ["", st];
+  const cur = ordCur(o.currency); const open = !!ui.open[key];
+  return h("details", { class: "item", open, ontoggle: (ev) => { const was = !!ui.open[key]; ui.open[key] = ev.currentTarget.open; if (was !== ev.currentTarget.open) render(); } },
+    h("summary", {}, h("div", { class: "hist" },
+      h("div", { class: "t", dir: "auto" }, `#${o.num} · ${ordSec(o.section).label || o.section_label || "—"} · ${o.buyer_name || o.buyer_id || "بدون زبون"}`),
+      h("div", { class: "hist-sub" }, h("span", { class: "state " + cls }, h("i"), label),
+        h("span", { class: "num" }, `بيع ${money2(o.sell)} · ربح ${money2(o.profit)} ${cur.label}`),
+        h("span", { class: "num" }, fmtDateTime(ordAt(o))), o.imported ? h("span", {}, "من الدفتر") : null)), icon("down", "chev")),
+    open ? ordEdit(o) : null);
+}
+function ordEdit(o) {
+  const u = ordUi(); const f = (u.edit[o.num] ||= { status: o.status || "delivered", section: o.section || "", currency: o.currency || "", cost: o.cost, sell: o.sell, buyer_name: o.buyer_name || "", note: o.note || "" });
+  const { sections, currencies } = ordSettings();
+  const row = (k, v) => (v == null || v === "" ? null : h("div", { class: "kv" }, h("span", {}, k), h("b", { dir: "auto" }, String(v))));
+  const save = async () => {
+    const cost = toNum(f.cost), sell = toNum(f.sell);
+    if (!Number.isFinite(cost) || !Number.isFinite(sell) || cost < 0 || sell < 0) return toast("الكلفة والبيع لازم أرقام موجبة");
+    const cur = ordCur(f.currency); const sec = ordSec(f.section);
+    const data = { status: f.status, section: f.section, section_label: sec.label || f.section, currency: f.currency, currency_label: cur.label, usd_rate: +cur.usd_rate || 0,
+      cost, sell, profit: Math.round((sell - cost) * 1e6) / 1e6, buyer_name: f.buyer_name.trim(), note: f.note.trim() || null, edited_by: store.user.email, edited_at: serverTimestamp() };
+    if (f.status === "delivered" && !o.delivered_at) data.delivered_at = serverTimestamp();
+    try { await setDoc(sub("orders", String(o.num)), data, { merge: true }); delete u.edit[o.num]; toast(`انحفظ الطلب #${o.num}`); }
+    catch (e) { toast(explainError(e), 4500); }
+  };
+  return h("div", { class: "item-body" },
+    h("div", { class: "kvs" }, row("الزبون", o.buyer_id ? `${o.buyer_name || ""} (${o.buyer_id})` : o.buyer_name), row("التكت", o.ticket_name), row("سجّله", o.staff_name),
+      row("انسجل", fmtDateTime(toDate(o.created_at))), row("النقاط", o.points), row("آخر تعديل", o.edited_by ? `${o.edited_by} ${fmtDateTime(toDate(o.edited_at))}` : null)),
+    h("div", { class: "cols" },
+      fieldBox("الحالة", selectEl(f.status, Object.entries(ORD_STATE).map(([k, v]) => [k, v[1]]), (v) => { f.status = v; }, "os" + o.num, "الحالة")),
+      fieldBox("القسم", selectEl(f.section, sections.map((x) => [x.id, x.label]), (v) => { f.section = v; }, "osec" + o.num, "القسم")),
+      fieldBox("العملة", selectEl(f.currency, currencies.map((x) => [x.key, x.label]), (v) => { f.currency = v; }, "ocur" + o.num, "العملة")),
+      fieldBox("اسم الزبون", h("input", { class: "input", dir: "auto", value: f.buyer_name, "data-fk": "obn" + o.num, oninput: (ev) => { f.buyer_name = ev.target.value; } })),
+      fieldBox("الكلفة", numInput(f.cost, (v) => { f.cost = v; }, "oc" + o.num, "الكلفة")),
+      fieldBox("سعر البيع", numInput(f.sell, (v) => { f.sell = v; }, "osl" + o.num, "سعر البيع"))),
+    fieldBox("ملاحظة", h("textarea", { class: "input", rows: 2, dir: "auto", "data-fk": "on" + o.num, oninput: (ev) => { f.note = ev.target.value; } }, f.note)),
+    h("div", { class: "toolbar" }, h("button", { class: "btn primary", type: "button", onclick: save }, icon("check"), "حفظ التعديل"),
+      h("span", { class: "note" }, "«ملغي» و«مسترجع» ما ينحسبن بالأرباح. النقاط ما تتغير من هنا.")));
+}
+function ordAddForm() {
+  const u = ordUi(); const f = u.add; const { sections, currencies } = ordSettings();
+  const submit = async () => {
+    const cost = toNum(f.cost), sell = toNum(f.sell);
+    if (!f.section) return toast("اختار القسم");
+    if (!Number.isFinite(cost) || !Number.isFinite(sell) || cost < 0 || sell < 0) return toast("الكلفة والبيع لازم أرقام موجبة");
+    const ok = await ordAction("order_create", { section: f.section, currency: f.currency, cost, sell, status: f.status, buyer_id: String(f.buyer_id || "").replace(/\D/g, ""),
+      buyer_name: f.buyer_name || "", points: toNum(f.points) || 0, note: f.note || "" }, ordOnline() ? "انرسل لبوت التكت، يطلع بالقائمة خلال ثواني" : "انرسل، وينسجل أول ما يشتغل بوت التكت");
+    if (ok) { u.add = null; render(); }
+  };
+  return h("section", { class: "card card-pad stack" }, h("h2", { style: "margin:0;font-size:17px" }, "طلب جديد"),
+    h("p", { class: "f-help" }, "للبيعات اللي ما صارت بتذكرة. بوت التكت يعطيه رقم، وإذا كتبت آيدي الزبون وعدد نقاط تنضاف نقاطه وتوصله رسالة."),
+    h("div", { class: "cols" },
+      fieldBox("القسم", selectEl(f.section, sections.map((x) => [x.id, x.label]), (v) => { f.section = v; }, "nsec", "القسم")),
+      fieldBox("العملة", selectEl(f.currency, currencies.map((x) => [x.key, x.label]), (v) => { f.currency = v; }, "ncur", "العملة")),
+      fieldBox("الكلفة", numInput(f.cost, (v) => { f.cost = v; }, "nc", "الكلفة", "مثلاً 2")),
+      fieldBox("سعر البيع", numInput(f.sell, (v) => { f.sell = v; }, "ns", "سعر البيع", "مثلاً 3")),
+      fieldBox("آيدي الزبون (اختياري)", h("input", { class: "input num", inputmode: "numeric", value: f.buyer_id || "", "data-fk": "nbid", oninput: (ev) => { f.buyer_id = ev.target.value; } })),
+      fieldBox("اسم الزبون (إذا ما عنده آيدي)", h("input", { class: "input", dir: "auto", value: f.buyer_name || "", "data-fk": "nbn", oninput: (ev) => { f.buyer_name = ev.target.value; } })),
+      fieldBox("النقاط (اختياري)", numInput(f.points, (v) => { f.points = v; }, "np", "النقاط", "مثلاً 5")),
+      fieldBox("الحالة", selectEl(f.status, [["delivered", "تم التسليم"], ["pending", "معلق"]], (v) => { f.status = v; }, "nst", "الحالة"))),
+    fieldBox("ملاحظة", h("textarea", { class: "input", rows: 2, dir: "auto", "data-fk": "nn", oninput: (ev) => { f.note = ev.target.value; } }, f.note || "")),
+    h("div", { class: "toolbar" }, h("button", { class: "btn primary", type: "button", onclick: submit }, icon("plus"), "تسجيل الطلب")));
+}
+function ordExpenses() {
+  const u = ordUi(); const r = ordRange(u.range); const { currencies } = ordSettings();
+  const list = (S().expenses || []).filter((e) => !e.deleted && (u.range === "all" || inRange(expAt(e), r))).sort((a, b) => (expAt(b) || 0) - (expAt(a) || 0));
+  const f = (u.exp ||= { date: dayKey(new Date()), currency: (currencies[0] || {}).key || "", amount: "", note: "" });
+  const add = async () => {
+    const amount = toNum(f.amount);
+    if (!Number.isFinite(amount) || amount <= 0) return toast("المبلغ لازم رقم أكبر من صفر");
+    if (!f.note.trim()) return toast("اكتب شنو هذا المصروف");
+    const cur = ordCur(f.currency);
+    try { await addDoc(subcol("expenses"), { date: f.date, amount, currency: f.currency, currency_label: cur.label, note: f.note.trim(), by: store.user.email, at: serverTimestamp() });
+      u.exp = { date: f.date, currency: f.currency, amount: "", note: "" }; toast("انضاف المصروف"); render(); }
+    catch (e) { toast(explainError(e), 4500); }
+  };
+  const del = async (e) => {
+    if (!confirm(`تحذف مصروف «${e.note}»؟`)) return;
+    try { await setDoc(sub("expenses", e.id), { deleted: true, deleted_by: store.user.email, deleted_at: serverTimestamp() }, { merge: true }); toast("انحذف"); }
+    catch (err) { toast(explainError(err), 4500); }
+  };
+  const totals = {}; for (const e of list) totals[e.currency] = (totals[e.currency] || 0) + (+e.amount || 0);
+  return [ordRangeChips(),
+    h("section", { class: "card card-pad stack" }, h("h2", { style: "margin:0;font-size:17px" }, "إضافة مصروف"),
+      h("p", { class: "f-help" }, "أي فلوس تطلع من المتجر ومو كلفة طلب: إعلانات، استضافة، رواتب، عمولات… تنخصم من صافي الربح."),
+      h("div", { class: "cols" },
+        fieldBox("التاريخ", h("input", { class: "input", type: "date", value: f.date, "data-fk": "ed", oninput: (ev) => { f.date = ev.target.value; } })),
+        fieldBox("العملة", selectEl(f.currency, currencies.map((x) => [x.key, x.label]), (v) => { f.currency = v; }, "ecur", "العملة")),
+        fieldBox("المبلغ", numInput(f.amount, (v) => { f.amount = v; }, "ea", "المبلغ", "مثلاً 10")),
+        fieldBox("شنو هو", h("input", { class: "input", dir: "auto", value: f.note, "data-fk": "en", placeholder: "مثلاً استضافة البوتات", oninput: (ev) => { f.note = ev.target.value; } }))),
+      h("div", { class: "toolbar" }, h("button", { class: "btn primary", type: "button", onclick: add }, icon("plus"), "إضافة"))),
+    list.length ? h("section", { class: "card" }, h("div", { class: "card-head" }, h("h2", {}, "المصروفات"),
+        h("span", { class: "muted num", style: "font-size:13px" }, Object.entries(totals).map(([k, v]) => `${money2(v)} ${ordCur(k).label}`).join(" · "))),
+      h("div", { class: "table-wrap", style: "padding-top:8px" }, h("table", { class: "t" },
+        h("thead", {}, h("tr", {}, h("th", {}, "التاريخ"), h("th", {}, "شنو"), h("th", { class: "n" }, "المبلغ"), h("th", {}, ""))),
+        h("tbody", {}, list.map((e) => h("tr", {}, h("td", { class: "num" }, e.date || fmtDate(toDate(e.at))), h("td", { dir: "auto", class: "clip", title: e.note }, e.note),
+          h("td", { class: "n num" }, `${money2(e.amount)} ${ordCur(e.currency).label}`),
+          h("td", {}, h("button", { class: "icon-btn bare", type: "button", "aria-label": "حذف " + e.note, onclick: () => del(e) }, icon("trash", "sm"))))))))) :
+      emptyState("wallet", "ماكو مصروفات بهالفترة", null)];
+}
+// ------------------------------------------------------------------ فحص الأرصدة (بوت التحويلات)
+function trAuditCard() {
+  const a = S().trAudit; if (a === undefined) return null;
+  const issues = (a && a.issues) || []; const stuck = (a && a.stuck) || [];
+  const cleanText = (t) => String(t || "").replace(/<@!?(\d+)>/g, (_, id) => { const w = (S().trWallets || []).find((x) => x.id === id); return w && w.name ? w.name : id; }).replace(/\*\*/g, "");
+  return h("section", { class: "card card-pad stack", style: "gap:12px" },
+    h("div", { class: "card-title-row" }, h("h2", { style: "margin:0;font-size:17px;flex:1" }, "فحص الأرصدة"),
+      h("button", { class: "btn", type: "button", onclick: () => trAction("tr_audit", {}, "انطلب الفحص، النتيجة تطلع هنا خلال ثواني") }, icon("refresh"), "افحص الآن")),
+    h("p", { class: "f-help" }, a && a.at ? `آخر فحص ${ago(toDate(a.at))}: ${fmt(a.ledger_rows || 0)} حركة بالسجل و${fmt(a.wallets || 0)} محفظة. ينسوى لحاله كل يوم، والبوت ما يصلح شي لحاله.` :
+      "بعده ما انسوى فحص. ينسوى لحاله كل يوم، أو دوس «افحص الآن»."),
+    a && a.at ? (issues.length ? h("div", { class: "notice bad" }, icon("alert"), h("div", {}, h("b", {}, `${fmt(issues.length)} مشكلة تحتاج مراجعة`),
+      h("ul", {}, issues.slice(0, 30).map((i) => h("li", { dir: "auto" }, cleanText(i.text))))))
+      : h("div", { class: "statusline", style: "padding:0" }, h("span", { class: "dot on" }), "كل الأرصدة مطابقة للسجل، وما أكو وصل انضاف مرتين أو سحب ما رجع رصيده.")) : null,
+    stuck.length ? h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "طلبات عالقة"),
+      h("ul", {}, stuck.map((x) => h("li", {}, `${x.kind === "wd" ? "طلب سحب" : "وصل"} #${x.num} بانتظار من ${fmt(Math.round(x.hours))} ساعة`))))) : null);
 }
 // ------------------------------------------------------------------ التشغيل
 window.addEventListener("hashchange", () => {
