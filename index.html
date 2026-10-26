@@ -438,6 +438,47 @@ body.chat-mode .savebar { display: none; }
 .emo-grid img { width: 28px; height: 28px; object-fit: contain; }
 .chat-empty { flex: 1; display: grid; place-items: center; padding: 24px; }
 .up-prog { height: 4px; background: var(--raised); border-radius: 4px; overflow: hidden; } .up-prog i { display: block; height: 100%; background: var(--accent); }
+
+/* ------------------------------------------------------------------ تحسينات التصميم والإحصائيات */
+:root { --r-card: 18px; --r-ctl: 12px; --series-1: #D9B72D; --series-2: #6E9CF5; }
+body { background-image: radial-gradient(ellipse at 90% 0%, rgba(217,183,45,.055), transparent 34rem); }
+.card { box-shadow: 0 8px 24px rgba(0,0,0,.10); transition: border-color var(--fast), transform var(--fast), box-shadow var(--fast); }
+.card:hover { border-color: color-mix(in srgb, var(--accent) 26%, var(--border)); }
+.card-head { padding-top: 18px; }
+main { gap: 20px; }
+@media (min-width: 1024px) { main > * { max-width: 1120px; } }
+.kpis { gap: 14px; }
+.kpi { min-height: 116px; padding: 18px 18px 16px; padding-inline-start: 24px; background: linear-gradient(145deg, color-mix(in srgb, var(--card) 92%, var(--accent)), var(--card) 62%); overflow: hidden; }
+.kpi::before { inset-block: 18px; inset-inline-start: 11px; width: 4px; }
+.kpi .l { font-size: 13px; letter-spacing: .01em; }
+.kpi .v { font-size: clamp(24px, 3vw, 32px); letter-spacing: -.025em; }
+.kpi.lead .v { font-size: clamp(29px, 3.5vw, 38px); }
+.kpi .s { line-height: 1.45; }
+.chart { padding: 12px 18px 18px; }
+.chart svg { max-height: 270px; }
+.legend { padding-inline: 18px; }
+.cols { gap: 18px; }
+.chips { padding-block: 4px; }
+.chip { background: color-mix(in srgb, var(--card) 85%, transparent); }
+.stats-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 4px 2px 2px; }
+.stats-intro .stats-copy { display: grid; gap: 5px; }
+.stats-intro h2 { font-size: clamp(22px, 3vw, 28px); line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
+.stats-intro p { color: var(--muted); font-size: 14px; line-height: 1.65; max-width: 62ch; }
+.stats-intro .stats-mark { width: 44px; height: 44px; border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border)); background: var(--wash); color: var(--accent); border-radius: 14px; display: grid; place-items: center; flex: none; }
+.stats-intro .stats-mark .ic { width: 22px; height: 22px; }
+@media (max-width: 480px) {
+  main { padding: 14px 12px 110px; gap: 14px; }
+  .kpis { gap: 9px; }
+  .kpi { min-height: 104px; padding: 14px 12px; padding-inline-start: 18px; }
+  .kpi::before { inset-inline-start: 7px; }
+  .kpi .l { font-size: 12px; }
+  .kpi .v { font-size: 25px; }
+  .kpi.lead .v { font-size: 29px; }
+  .stats-intro h2 { font-size: 22px; }
+  .stats-intro p { font-size: 13px; }
+  .stats-intro .stats-mark { width: 40px; height: 40px; }
+}
+
 </style>
 </head>
 <body>
@@ -1162,6 +1203,11 @@ function refreshSaveBar() {
 }
 
 // ------------------------------------------------------------------ الإحصائيات
+function statsIntro(title, description, iconName) {
+  return h("div", { class: "stats-intro" },
+    h("div", { class: "stats-copy" }, h("h2", {}, title), h("p", {}, description)),
+    h("div", { class: "stats-mark", "aria-hidden": "true" }, icon(iconName)));
+}
 function rangeChips() {
   return h("div", { class: "chips", role: "group", "aria-label": "الفترة" }, RANGES.map((r) => h("button", { class: "chip", "aria-pressed": String(ui.range === r.id), onclick: () => { ui.range = r.id; ui.ticketsShown = 20; render(); } }, r.label)));
 }
@@ -1244,7 +1290,7 @@ function drawTicketStats() {
   const done = rows.filter((t) => t.completed), closed = rows.filter((t) => t.status === "closed" && !t.completed), deleted = rows.filter((t) => t.status === "deleted"), open = rows.filter((t) => t.status === "open");
   const times = rows.filter((t) => t.closed && t.created).map((t) => t.closed - t.created).sort((a, b) => a - b);
   const median = times.length ? times[Math.floor(times.length / 2)] : null;
-  if (!rows.length && !st.openTickets) return [rangeChips(), emptyState("inbox", "ماكو تذاكر بهالفترة", "الإحصائيات تبدي من يوم اشتغل بوت التكت. جرب فترة أطول.",
+  if (!rows.length && !st.openTickets) return [statsIntro("إحصائيات التذاكر", "تابع حجم العمل، حالات الإغلاق، وأداء التكتات حسب الفترة.", "chart"), rangeChips(), emptyState("inbox", "ماكو تذاكر بهالفترة", "الإحصائيات تبدي من يوم اشتغل بوت التكت. جرب فترة أطول.",
     range !== "all" ? h("button", { class: "btn", onclick: () => { ui.range = "all"; render(); } }, "عرض كل الفترات") : null)];
   const { list, step } = buckets(range, rows.map((t) => t.created).filter(Boolean));
   const opened = list.map(() => 0), finished = list.map(() => 0);
@@ -1258,9 +1304,9 @@ function drawTicketStats() {
   const sorted = [...rows].sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "ar") : x - y) * sort.dir; });
   const th = (key, label, cls) => h("th", { class: cls || "", scope: "col", "aria-sort": sort.key === key ? (sort.dir > 0 ? "ascending" : "descending") : null },
     h("button", { onclick: () => { ui.sort = { key, dir: sort.key === key ? -sort.dir : key === "created" ? -1 : 1 }; render(); } }, label, icon(sort.key === key ? (sort.dir > 0 ? "up" : "downarrow") : "sort", "sm")));
-  return [rangeChips(),
+  return [statsIntro("إحصائيات التذاكر", "نظرة مرتبة على عدد التذاكر، الإنجاز، وقت الإغلاق، وأداء الأقسام والموظفين.", "chart"), rangeChips(),
     h("div", { class: "kpis" }, kpi(fmt(rows.length), "تذكرة انفتحت بالفترة", "lead"), kpi(fmt(st.openTickets ?? open.length), "مفتوحة هسه", "warn"),
-      kpi(fmt(done.length), "اكتملت (dn)", "good", ended ? `${Math.round((done.length / ended) * 100)}% من اللي انتهت` : null), kpi(fmt(closed.length), "انغلقت بدون إكمال"),
+      kpi(fmt(done.length), "اكتملت", "good", ended ? `${Math.round((done.length / ended) * 100)}% من اللي انتهت` : null), kpi(fmt(closed.length), "انغلقت بدون إكمال"),
       kpi(fmt(deleted.length), "انحذفت", deleted.length ? "bad" : ""), kpi(median == null ? "—" : span(median), "الوقت المعتاد للإغلاق")),
     columnChart("tickets", step === 1 ? "التذاكر كل يوم" : step === 7 ? "التذاكر كل أسبوع" : "التذاكر كل شهر", list, [{ name: "انفتحت", color: "var(--series-1)", values: opened }, { name: "اكتملت", color: "var(--series-2)", values: finished }]),
     h("div", { class: "cols" }, barCard("حسب القسم", "عدد التذاكر، وبجنبه كم وحدة اكتملت.", withDone(bySection)),
@@ -1278,13 +1324,13 @@ function drawReviewStats() {
   const st = S(); const range = ui.range; const rows = st.reviews[range];
   if (!rows) { loadReviews(range); return statsSkeleton(); }
   const total = st.reviewsInfo && st.reviewsInfo.total; const people = new Set(rows.map((r) => r.user_id)).size;
-  if (!rows.length && !total) return [rangeChips(), emptyState("star", "ماكو تقييمات مسجلة بعد", "أول ما البوت الأساسي يشتغل ويا ملف panel.py يعد تقييمات الروم القديمة ويسجل الجديدة.")];
+  if (!rows.length && !total) return [statsIntro("إحصائيات التقييمات", "تابع تفاعل الزبائن وتقييماتهم عبر الفترات المختلفة.", "star"), rangeChips(), emptyState("star", "ماكو تقييمات مسجلة بعد", "أول ما البوت الأساسي يشتغل ويا ملف panel.py يعد تقييمات الروم القديمة ويسجل الجديدة.")];
   const { list, step } = buckets(range, rows.map((r) => r.at)); const counts = list.map(() => 0);
   for (const r of rows) { const i = place(list, r.at); if (i >= 0) counts[i]++; }
   const days = RANGES.find((x) => x.id === range).days || Math.max(1, list.length * step);
   const top = tally(rows, (r) => r.user_id, (r) => r.display_name || r.username || r.user_id).slice(0, 10);
   const partial = range === "all" && total && rows.length < total;
-  return [rangeChips(),
+  return [statsIntro("إحصائيات التقييمات", "راقب نمو التقييمات، عدد الزبائن المشاركين، والنشاط بمرور الوقت.", "star"), rangeChips(),
     h("div", { class: "kpis" }, kpi(fmt(total ?? rows.length), "مجموع التقييمات من البداية", "lead"), kpi(fmt(rows.length), range === "all" ? "تقييم محفوظ بتفاصيله" : "تقييم بهالفترة", "good"),
       kpi(fmt(people), "زبون قيّم"), kpi((rows.length / days).toFixed(1), "تقييم باليوم تقريباً")),
     partial ? h("div", { class: "notice" }, icon("alert"), h("div", {}, `التفاصيل تحت محسوبة من آخر ${fmt(rows.length)} تقييم. الأقدم محسوب بالمجموع بس.`)) : null,
