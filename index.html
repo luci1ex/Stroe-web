@@ -147,6 +147,13 @@ main { padding: 16px 16px 120px; max-width: 920px; margin-inline: auto; display:
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 700px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .kpis.three .kpi.lead { grid-column: span 2; }
+.kpis.periods { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.kpi.period { font: inherit; color: inherit; text-align: start; cursor: pointer; padding: 12px 10px; padding-inline-start: 18px; }
+.kpi.period::before { inset-inline-start: 7px; }
+.kpis.periods .kpi.period .v { font-size: clamp(15px, 4.4vw, 26px); white-space: nowrap; }
+.kpi.period .s span { unicode-bidi: isolate; direction: ltr; display: inline-block; }
+.kpi.period .l, .kpi.period .s { font-size: 13px; }
+.kpi.period:focus-visible { outline: 2px solid var(--accent, #E6D724); outline-offset: 2px; }
 @media (min-width: 700px) { .kpis.three .kpi.lead { grid-column: auto; } }
 .kpi { position: relative; padding: 14px 16px; padding-inline-start: 22px; display: grid; gap: 4px; align-content: start; }
 .kpi::before { content: ""; position: absolute; inset-block: 14px; inset-inline-start: 10px; width: 3px; border-radius: 3px; background: var(--border); }
@@ -2156,9 +2163,9 @@ function chatRefreshExtra() {
 // ------------------------------------------------------------------ الطلبات والأرباح
 const ORD_TABS = [{ id: "overview", label: "نظرة عامة" }, { id: "list", label: "الطلبات" }, { id: "expenses", label: "المصروفات" }];
 const ORD_STATE = { delivered: ["done", "تم التسليم"], pending: ["open", "معلق"], cancelled: ["deleted", "ملغي"], refunded: ["deleted", "مسترجع"] };
-const ORD_RANGES = [{ id: "today", label: "اليوم" }, { id: "7", label: "7 أيام" }, { id: "30", label: "30 يوم" }, { id: "month", label: "هذا الشهر" },
-  { id: "prev", label: "الشهر الماضي" }, { id: "all", label: "الكل" }];
-const ordUi = () => (ui.ord ||= { tab: "overview", range: "30", q: "", status: "all", shown: 40, edit: {}, add: null, exp: null });
+const ORD_RANGES = [{ id: "today", label: "اليوم" }, { id: "yesterday", label: "أمس" }, { id: "week", label: "هذا الأسبوع" }, { id: "month", label: "هذا الشهر" },
+  { id: "7", label: "7 أيام" }, { id: "30", label: "30 يوم" }, { id: "prev", label: "الشهر الماضي" }, { id: "all", label: "الكل" }];
+const ordUi = () => (ui.ord ||= { tab: "overview", range: "today", q: "", status: "all", shown: 40, edit: {}, add: null, exp: null });
 const money2 = (v) => Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 });
 let ordMemo = null;
 function ordSettings() {
@@ -2182,6 +2189,9 @@ function ordRange(id) {
   const now = new Date(); const today = startOfDay(now).getTime(); const end = today + 864e5;
   const ym = dayKey(now).slice(0, 7); const monthStart = new Date(ym + "-01T00:00:00+03:00").getTime();
   if (id === "today") return [today, end];
+  if (id === "yesterday") return [today - 864e5, today];
+  if (id === "week") { // الأسبوع يبدي السبت الساعة 12 بالليل (بتوقيت بغداد)
+    const dow = new Date(dayKey(now) + "T12:00:00+03:00").getUTCDay(); return [today - ((dow + 1) % 7) * 864e5, end]; }
   if (id === "7") return [today - 6 * 864e5, end];
   if (id === "30") return [today - 29 * 864e5, end];
   if (id === "month") return [monthStart, end];
@@ -2240,10 +2250,32 @@ function ordBuckets(rangeId, dates) {
   for (let t = to; t > from; t -= step * 864e5) { const a = Math.max(from, t - step * 864e5); out.unshift({ from: a, to: t, label: step === 1 ? dm(new Date(a)) : `${dm(new Date(a))} – ${dm(new Date(t - 1))}`, short: dm(new Date(a)) }); }
   return { list: out, step };
 }
+// اليوم/الأسبوع/الشهر يتصفرون لحالهم الساعة 12 بالليل بتوقيت بغداد - حتى لو الصفحة مفتوحة
+let ordMidnight = null;
+function ordArmMidnight() {
+  if (ordMidnight) return;
+  const wait = Math.max(1000, startOfDay(new Date()).getTime() + 864e5 - Date.now() + 1500);
+  ordMidnight = setTimeout(() => { ordMidnight = null; if (store.page === "orders") render(); }, wait);
+}
+function ordPeriods() {
+  ordArmMidnight();
+  const u = ordUi();
+  const card = (id, title) => {
+    const sm = ordSummary(id); const net = sm.usd.profit - sm.usd.exp;
+    return h("button", { type: "button", class: "card kpi period" + (u.range === id ? " lead" : ""), "aria-pressed": String(u.range === id),
+      onclick: () => { u.range = id; u.shown = 40; render(); } },
+      h("div", { class: "l" }, title), h("div", { class: "v", dir: "ltr" }, `$${money2(sm.usd.profit)}`),
+      h("div", { class: "s" }, `${fmt(sm.delivered.length)} طلب`),
+      sm.usd.exp ? h("div", { class: "s" }, "الصافي ", h("span", { dir: "ltr" }, `${net < 0 ? "-" : ""}$${money2(Math.abs(net))}`)) : null);
+  };
+  return h("section", { "aria-label": "الربح حسب الفترة" },
+    h("div", { class: "kpis periods" }, card("today", "ربح اليوم"), card("week", "ربح هذا الأسبوع"), card("month", "ربح هذا الشهر")),
+    h("p", { class: "card-note", style: "margin:6px 2px 14px" }, "اليوم يتصفر الساعة 12 بالليل بتوقيت بغداد، والأسبوع يبدي السبت، والشهر يبدي يوم 1."));
+}
 function ordOverview() {
   const u = ordUi(); const sm = ordSummary(u.range); const usd = sm.usd;
   const net = usd.profit - usd.exp;
-  const out = [ordRangeChips()];
+  const out = [ordPeriods(), ordRangeChips()];
   if (!(S().orders || []).length) {
     out.push(emptyState("chart", "ماكو طلبات بعد", "أول ما الطاقم يسجل طلب من التذكرة («تسجيل التسليم» أو أمر «طلب») يطلع هنا. وطلبات دفتر المتجر القديمة تنتقل لحالها أول ما يشتغل بوت التكت الجديد."));
     return out;
