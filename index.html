@@ -454,7 +454,7 @@ body.chat-mode .savebar { display: none; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
-import { getFirestore, doc, collection, getDoc, getDocs, setDoc, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, Bytes } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, collection, getDoc, getDocs, setDoc, addDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, Timestamp, Bytes } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 // نفس مشروع Firebase مال موقع الدفتر. هذي القيم مو سرية - الحماية بقواعد Firestore.
 const firebaseConfig = {
@@ -493,7 +493,10 @@ const MAX_IMAGE = 900000;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
+// نسخة محلية بالمتصفح: إذا رجعت فتحت الموقع خلال نص ساعة، Firebase يجيب بس اللي تغير بدل كلشي (أقل قراءات)
+let db;
+try { db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+catch { db = getFirestore(app); }
 
 // ------------------------------------------------------------------ أدوات
 const $app = document.getElementById("app");
@@ -641,16 +644,41 @@ function watch() {
   unsubs.push(onSnapshot(sub("info", "guild"), guard((d) => { st.guild = d.exists() ? d.data() : {}; render(); }), fail));
   if (srv === "lucifer") {
     unsubs.push(onSnapshot(sub("info", "broadcast"), guard((d) => { st.bcInfo = d.exists() ? d.data() : false; if (store.page === "bot-broadcast") render(); }), fail));
+  }
+  watchBots();
+  lazyOn = {};
+  needFor(store.page);
+}
+
+// البيانات الكبيرة (الطلبات، التحويلات، تاريخ الإعلانات) تنحمل بس لما تفتح صفحتها أول مرة -
+// قبل جانت تنحمل كلها ويا كل فتحة للموقع حتى لو ما فتحت صفحتها، وتصرف حد Firebase اليومي
+let lazyOn = {};
+const LAZY_PAGES = { "bot-broadcast": "bc", "bot-transfers": "tr", "orders": "ord" };
+function needFor(pageId) { const g = LAZY_PAGES[pageId]; if (g) need(g); }
+function need(group) {
+  if (lazyOn[group] || store.server !== "lucifer") return;
+  lazyOn[group] = true;
+  const st = S(); const srv = store.server;
+  const guard = (fn) => (snap) => { if (store.server === srv) fn(snap); };
+  const fail = (e) => { if (store.server !== srv) return; st.error = explainError(e); render(); };
+  if (group === "bc") {
     unsubs.push(onSnapshot(query(subcol("broadcasts"), orderBy("created_at", "desc"), limit(150)), guard((q) => { st.bcHistory = q.docs.map((x) => ({ id: x.id, ...x.data() })); if (store.page === "bot-broadcast") render(); }), fail));
+  } else if (group === "tr") {
     const trRender = () => { if (store.page === "bot-transfers") render(); };
     unsubs.push(onSnapshot(query(subcol("tr_requests"), orderBy("created_at", "desc"), limit(400)), guard((q) => { st.trReq = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), orderBy("created_at", "desc"), limit(300)), guard((q) => { st.trWd = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(subcol("tr_wallets"), guard((q) => { st.trWallets = q.docs.map((x) => ({ id: x.id, ...x.data() })); trRender(); }), fail));
     unsubs.push(onSnapshot(sub("info", "transfers_audit"), guard((d) => { st.trAudit = d.exists() ? d.data() : null; trRender(); }), fail));
+  } else if (group === "ord") {
     const ordRender = () => { if (store.page === "orders") render(); };
     unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
     unsubs.push(onSnapshot(subcol("expenses"), guard((q) => { st.expenses = q.docs.map((x) => ({ id: x.id, ...x.data() })); ordRender(); }), fail));
   }
+}
+function watchBots() {
+  const st = S(); const srv = store.server;
+  const guard = (fn) => (snap) => { if (store.server === srv) fn(snap); };
+  const fail = (e) => { if (store.server !== srv) return; st.error = explainError(e); render(); };
   for (const bot of BOT_KEYS) {
     unsubs.push(onSnapshot(sub("schema", bot), guard((d) => { st.schema[bot] = d.exists() ? d.data() : false; rebase(bot); render(); }), fail));
     unsubs.push(onSnapshot(sub("settings", bot), guard((d) => { st.settings[bot] = d.exists() ? d.data() : {}; rebase(bot); render(); }), fail));
@@ -752,6 +780,7 @@ function draw() {
   if (!store.user) return drawLogin();
   if (store.denied) return drawDenied();
   const page = PAGES.find((p) => p.id === store.page);
+  needFor(page.id);
   chatSync(); document.body.classList.toggle("chat-mode", page.id === "bot-chat");
   if (page.id === "bot-chat" && chatMounted()) { chatRefresh(); document.title = `${page.title} - ${SERVERS[store.server].name}`; return; }
   const keep = captureFocus();
