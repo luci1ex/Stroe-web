@@ -445,6 +445,135 @@ body.chat-mode .savebar { display: none; }
 .emo-grid img { width: 28px; height: 28px; object-fit: contain; }
 .chat-empty { flex: 1; display: grid; place-items: center; padding: 24px; }
 .up-prog { height: 4px; background: var(--raised); border-radius: 4px; overflow: hidden; } .up-prog i { display: block; height: 100%; background: var(--accent); }
+
+/* ================================================================== ستايل الزجاج (Glass)
+   خلفية سودة ويا توهج ذهبي خفيف، والبطاقات زجاج شفاف (blur) - والأصفر للبطاقات المميزة */
+:root {
+  --bg: #050506;
+  --card: rgba(255, 255, 255, .055); --raised: rgba(255, 255, 255, .085); --hover: rgba(255, 255, 255, .13);
+  --border: rgba(255, 255, 255, .11); --control: rgba(255, 255, 255, .28);
+  --glass-blur: 16px; --glass-edge: rgba(255, 255, 255, .16);
+  --glass-shadow: 0 10px 30px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .07);
+  --gold-1: #F6E64A; --gold-2: #E6C719; --gold-3: #B8920C;
+  --r-card: 22px; --r-ctl: 14px;
+}
+body { background: var(--bg); }
+body::before { content: ""; position: fixed; inset: -10%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(38% 32% at 85% 8%, rgba(230, 199, 25, .20), transparent 70%),
+    radial-gradient(30% 28% at 8% 92%, rgba(230, 215, 36, .12), transparent 70%),
+    radial-gradient(45% 40% at 40% 55%, rgba(255, 255, 255, .035), transparent 70%),
+    var(--bg); }
+.card { background: var(--card); border-color: var(--border); box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%); backdrop-filter: blur(var(--glass-blur)) saturate(140%); }
+.card .card { box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.topbar { background: rgba(8, 8, 10, .55); border-bottom-color: var(--border); -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); }
+.side { background: rgba(14, 14, 17, .72); border-inline-end-color: var(--border); -webkit-backdrop-filter: blur(22px) saturate(150%); backdrop-filter: blur(22px) saturate(150%); }
+@media (min-width: 1024px) {
+  .side { inset-block: 12px; inset-inline-start: 12px; border-radius: 26px; border: 1px solid var(--border); box-shadow: var(--glass-shadow); height: auto; }
+  .topbar, main, .savebar { margin-inline-start: calc(var(--side-w) + 24px); }
+  .topbar { margin-top: 12px; margin-inline-end: 12px; border-radius: 20px; border: 1px solid var(--border); top: 12px; }
+}
+.brand .mark { background: linear-gradient(135deg, var(--gold-1), var(--gold-3)); border-radius: 14px; box-shadow: 0 6px 18px rgba(230, 199, 25, .35); }
+.nav a { border-radius: 14px; }
+.nav a[aria-current="page"] { background: linear-gradient(90deg, rgba(230, 215, 36, .18), rgba(230, 215, 36, .06)); box-shadow: inset 0 0 0 1px rgba(230, 215, 36, .25); }
+.btn { border-radius: 999px; background: var(--raised); border-color: var(--border); }
+.btn.primary { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); box-shadow: 0 6px 18px rgba(230, 199, 25, .28); }
+.btn.ghost { background: none; }
+.icon-btn { border-radius: 14px; }
+.input, textarea.input { background: rgba(255, 255, 255, .06); border-color: var(--control); border-radius: 14px; }
+.chip { background: var(--card); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+.chip[aria-pressed="true"] { background: rgba(230, 215, 36, .16); }
+.server-switch, .notice { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.kpi { border-radius: 20px; }
+.kpi.lead { background: linear-gradient(135deg, rgba(246, 230, 74, .22), rgba(230, 199, 25, .08)); border-color: rgba(230, 215, 36, .35); }
+.group > summary { border-radius: 22px; }
+.savebar { -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+.toast { -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+@media (prefers-reduced-transparency: reduce) {
+  :root { --card: #121214; --raised: #1b1b1f; --hover: #24242a; }
+  .card, .topbar, .side, .chip { -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+
+/* ------------------------------------------------------------------ الرئيسية */
+.home { display: grid; gap: 16px; }
+main > .home { max-width: 1240px; }
+main:focus, main:focus-visible { outline: none; }
+a.btn { text-decoration: none; color: inherit; }
+.hero a.btn { color: var(--gold-1); } .hero a.btn.out { color: #111108; }
+.hello { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+.hello > div { flex: 1; min-width: 220px; }
+.hello h2 { font-size: clamp(24px, 6vw, 34px); font-weight: 700; line-height: 1.2; letter-spacing: -.01em; }
+.hello p { color: var(--muted); font-size: 14px; margin-top: 6px; }
+.hello .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.home-top { display: grid; gap: 16px; }
+@media (min-width: 1100px) { .home-top { grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr); } }
+.hero { position: relative; overflow: hidden; border-radius: 26px; padding: 22px; color: #111108;
+  background: linear-gradient(140deg, #F8EA55 0%, #E9CB1B 48%, #C9A10D 100%);
+  box-shadow: 0 18px 40px rgba(201, 161, 13, .28), inset 0 1px 0 rgba(255, 255, 255, .45);
+  display: grid; gap: 18px; grid-template-columns: minmax(0, 1fr); }
+.hero::after { content: ""; position: absolute; inset: auto -20% -60% auto; width: 70%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, .35), transparent 65%); pointer-events: none; }
+@media (min-width: 640px) { .hero { grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding: 28px; } }
+.hero .pill { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; background: rgba(0, 0, 0, .12); width: fit-content; }
+.hero .pill i { width: 8px; height: 8px; border-radius: 50%; background: #111108; box-shadow: 0 0 0 3px rgba(0, 0, 0, .12); }
+.hero h3 { font-size: clamp(24px, 6.4vw, 36px); font-weight: 700; line-height: 1.15; margin-top: 12px; letter-spacing: -.01em; }
+.hero h3 em { font-family: Georgia, "Times New Roman", serif; font-weight: 500; font-style: italic; }
+.hero .lead-text { font-size: 14px; opacity: .78; margin-top: 8px; max-width: 46ch; }
+.hero .mini { display: flex; flex-wrap: wrap; gap: 0; margin-top: 18px; }
+.hero .mini div { padding-inline: 14px; border-inline-start: 2px solid rgba(0, 0, 0, .2); min-width: 0; }
+.hero .mini div:first-child { padding-inline-start: 0; border: 0; }
+.hero .mini b { display: block; font-size: 22px; font-weight: 700; line-height: 1.2; }
+.hero .mini span { font-size: 12px; opacity: .72; }
+.hero .btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+.hero .btn { background: #111108; color: var(--gold-1); border-color: transparent; box-shadow: none; }
+.hero .btn.light { background: rgba(255, 255, 255, .55); color: #111108; }
+.hero .btn.out { background: none; color: #111108; border: 1.5px solid rgba(0, 0, 0, .55); }
+.ring { position: relative; width: 168px; height: 168px; justify-self: center; z-index: 1; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; align-content: center; }
+.ring .c b { font-size: 34px; font-weight: 700; line-height: 1; }
+.ring .c span { font-size: 12px; opacity: .72; margin-top: 4px; }
+.week { padding: 18px; display: grid; gap: 14px; align-content: start; }
+.week-head { display: flex; align-items: center; gap: 12px; }
+.week-head .big { font-size: 44px; font-weight: 700; line-height: 1; color: var(--gold-1); font-variant-numeric: tabular-nums; }
+.week-head .t b { display: block; font-size: 16px; } .week-head .t span { color: var(--muted); font-size: 13px; }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; padding: 6px; border-radius: 18px; background: rgba(255, 255, 255, .04); border: 1px solid var(--border); }
+.day { display: grid; justify-items: center; gap: 2px; padding: 8px 0 6px; border-radius: 14px; font-size: 12px; color: var(--muted); min-width: 0; }
+.day b { font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+.day i { width: 5px; height: 5px; border-radius: 50%; background: transparent; }
+.day.has i { background: var(--gold-2); }
+.day.today { background: linear-gradient(160deg, var(--gold-1), var(--gold-3)); color: #111108; box-shadow: 0 6px 16px rgba(230, 199, 25, .3); }
+.day.today b { color: #111108; } .day.today i { background: #111108; }
+.todo { display: grid; gap: 8px; }
+.todo a, .todo .none { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: rgba(255, 255, 255, .06); border: 1px solid var(--border); color: inherit; text-decoration: none; min-height: 56px; transition: background var(--fast); }
+.todo a:hover { background: var(--hover); }
+.todo .time { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; direction: ltr; }
+.todo .what { border-inline-start: 3px solid var(--gold-2); padding-inline-start: 10px; min-width: 0; }
+.todo .what b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.todo .what span { font-size: 12px; color: var(--muted); }
+.todo .tagx { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(230, 215, 36, .16); color: var(--gold-1); }
+.todo .none { grid-template-columns: 1fr; color: var(--muted); font-size: 14px; text-align: center; }
+.stat4 { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 900px) { .stat4 { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; } }
+.st { position: relative; padding: 16px; display: grid; gap: 6px; border-radius: 22px; min-height: 168px; align-content: start; color: inherit; text-decoration: none; transition: transform var(--fast) var(--ease-out), background var(--fast); }
+a.st:hover { transform: translateY(-3px); }
+.st .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.st .ico { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, .1); border: 1px solid var(--border); }
+.st .ico .ic { width: 18px; height: 18px; }
+.st .trend { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(34, 197, 94, .15); color: #4ADE80; direction: ltr; }
+.st .trend.down { background: rgba(248, 113, 113, .15); color: #FCA5A5; }
+.st .v { font-size: clamp(24px, 6.6vw, 32px); font-weight: 700; line-height: 1.1; font-variant-numeric: tabular-nums; direction: ltr; text-align: end; unicode-bidi: isolate; }
+.st .l { font-size: 14px; font-weight: 600; }
+.st .s { font-size: 12px; color: var(--muted); }
+.st .spark { width: 100%; height: 34px; margin-top: auto; }
+.st .spark path { fill: none; stroke: var(--gold-2); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.st .spark circle { fill: var(--gold-1); }
+.st.gold { background: linear-gradient(150deg, #F6E64A, #D8B512); color: #111108; border-color: transparent; box-shadow: 0 14px 30px rgba(216, 181, 18, .25); }
+.st.gold .s { color: rgba(17, 17, 8, .7); } .st.gold .ico { background: rgba(0, 0, 0, .1); border-color: rgba(0, 0, 0, .12); }
+.st.gold .spark path { stroke: #111108; } .st.gold .spark circle { fill: #111108; }
+.st.gold .trend { background: rgba(0, 0, 0, .12); color: #111108; }
+.bots-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.bots-strip span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
 </style>
 </head>
 <body>
@@ -472,6 +601,7 @@ const SERVERS = {
   lucifer: { name: "Lucifer", full: "Lucifer Exchange", tickets: "tickets", theme: "#0A0A0B" },
 };
 const PAGES = [
+  { id: "home", title: "الرئيسية", icon: "home", only: "lucifer" },
   { id: "customers", title: "الزبائن", icon: "users" },
   { id: "orders", title: "الطلبات والأرباح", icon: "receipt", only: "lucifer" },
   { id: "bot-main", title: "البوت الأساسي", group: "التحكم بالبوت", bot: "main", icon: "bot" },
@@ -517,6 +647,10 @@ const s = (tag, attrs, ...kids) => h(tag, { ...attrs, svg: true }, ...kids);
 // أيقونات SVG بخط واحد (نفس السماكة والحجم بكل مكان)
 const ICONS = {
   menu: "M4 6h16M4 12h16M4 18h16",
+  home: "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  clock: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
+  dollar: "M12 2v20M17 6.5C17 4.6 14.8 3.5 12 3.5S7 4.6 7 6.7c0 4.8 10 2.6 10 7.6 0 2.2-2.2 3.4-5 3.4s-5-1.1-5-3.2",
+  arrow: "M7 17 17 7M8 7h9v9",
   users: "M2.5 20c0-3.5 2.9-6 6.5-6s6.5 2.5 6.5 6M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM16 4.5a3.5 3.5 0 0 1 0 6.6M18 14.4c2.1.8 3.5 2.6 3.5 5.6",
   bot: "M7 8h10a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3v-6a3 3 0 0 1 3-3zM12 8V4M9 13v2M15 13v2M2 13v3M22 13v3",
   ticket: "M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2zM14 5v2M14 11v2M14 17v2",
@@ -626,7 +760,7 @@ function readRoute() {
   try { saved = JSON.parse(localStorage.getItem("panel.route") || "{}"); } catch {}
   store.server = SERVERS[srv] ? srv : SERVERS[saved.server] ? saved.server : "lucifer";
   const usable = (id) => PAGES.some((p) => p.id === id && pageOk(p, store.server));
-  store.page = usable(page) ? page : usable(saved.page) ? saved.page : "customers";
+  store.page = usable(page) ? page : usable(saved.page) ? saved.page : usable("home") ? "home" : "customers";
 }
 function go(server, page) {
   const next = `#/${server}/${page}`;
@@ -653,7 +787,7 @@ function watch() {
 // البيانات الكبيرة (الطلبات، التحويلات، تاريخ الإعلانات) تنحمل بس لما تفتح صفحتها أول مرة -
 // قبل جانت تنحمل كلها ويا كل فتحة للموقع حتى لو ما فتحت صفحتها، وتصرف حد Firebase اليومي
 let lazyOn = {};
-const LAZY_PAGES = { "bot-broadcast": "bc", "bot-transfers": "tr", "orders": "ord" };
+const LAZY_PAGES = { "bot-broadcast": "bc", "bot-transfers": "tr", "orders": "ord", "home": "home" };
 function needFor(pageId) { const g = LAZY_PAGES[pageId]; if (g) need(g); }
 function need(group) {
   if (lazyOn[group] || store.server !== "lucifer") return;
@@ -669,6 +803,13 @@ function need(group) {
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), orderBy("created_at", "desc"), limit(300)), guard((q) => { st.trWd = q.docs.map((x) => x.data()); trRender(); }), fail));
     unsubs.push(onSnapshot(subcol("tr_wallets"), guard((q) => { st.trWallets = q.docs.map((x) => ({ id: x.id, ...x.data() })); trRender(); }), fail));
     unsubs.push(onSnapshot(sub("info", "transfers_audit"), guard((d) => { st.trAudit = d.exists() ? d.data() : null; trRender(); }), fail));
+  } else if (group === "home") {
+    // الرئيسية تقرا القليل بس: طلبات آخر 5 أسابيع (مو كل الطلبات) والوصولات والسحوبات المعلقة
+    const homeRender = () => { if (store.page === "home") render(); };
+    const from = new Date(Math.min(ordRange("month")[0], startOfDay(new Date()).getTime() - 34 * 864e5));
+    unsubs.push(onSnapshot(query(subcol("orders"), where("created_at", ">=", Timestamp.fromDate(from))), guard((q) => { st.homeOrders = q.docs.map((x) => x.data()); homeRender(); }), fail));
+    unsubs.push(onSnapshot(query(subcol("tr_requests"), where("status", "==", "pending")), guard((q) => { st.homeReq = q.docs.map((x) => x.data()); homeRender(); }), fail));
+    unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), where("status", "==", "pending")), guard((q) => { st.homeWd = q.docs.map((x) => x.data()); homeRender(); }), fail));
   } else if (group === "ord") {
     const ordRender = () => { if (store.page === "orders") render(); };
     unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
@@ -887,7 +1028,8 @@ function leaveGuard(nextPage) {
 function drawMain(page) {
   const st = S(); const body = [];
   if (st.error) body.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أجيب البيانات"), st.error)));
-  if (page.id === "customers") body.push(drawCustomers());
+  if (page.id === "home") body.push(drawHome());
+  else if (page.id === "customers") body.push(drawCustomers());
   else if (page.id === "orders") body.push(drawOrders());
   else if (page.id === "bot-broadcast") body.push(drawBroadcast());
   else if (page.id === "bot-transfers") body.push(drawTransfers());
@@ -904,6 +1046,137 @@ function kpi(value, label, cls, subText) {
   return h("div", { class: "card kpi " + (cls || "") }, h("div", { class: "l" }, label),
     h("div", { class: "v", dir: /[؀-ۿ]/.test(value) ? "rtl" : "ltr" }, value), subText ? h("div", { class: "s" }, subText) : null);
 }
+
+// ------------------------------------------------------------------ الرئيسية (لوحة زجاجية)
+function homeOrders() { const st = S(); return st.orders || st.homeOrders || null; }
+function homeSum(list, r) {
+  const out = { profit: 0, sell: 0, n: 0, pending: 0 };
+  for (const o of list) {
+    const d = ordAt(o); if (!inRange(d, r)) continue;
+    const status = o.status || "delivered";
+    if (status === "pending") { out.pending++; continue; }
+    if (status !== "delivered") continue;
+    const rate = +o.usd_rate || +ordCur(o.currency).usd_rate || 0; if (!(rate > 0)) continue;
+    out.n++; out.profit += (+o.profit || 0) / rate; out.sell += (+o.sell || 0) / rate;
+  }
+  return out;
+}
+function sparkPath(vals, w = 120, hgt = 34) {
+  if (!vals.length) return { d: "", x: 0, y: hgt / 2 };
+  const max = Math.max(...vals), min = Math.min(...vals), span = max - min || 1;
+  const pts = vals.map((v, i) => [vals.length === 1 ? w : (i / (vals.length - 1)) * w, hgt - 3 - ((v - min) / span) * (hgt - 6)]);
+  return { d: pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" "), x: pts.at(-1)[0], y: pts.at(-1)[1] };
+}
+function spark(vals) {
+  const p = sparkPath(vals);
+  return h("svg", { class: "spark", viewBox: "0 -2 124 38", preserveAspectRatio: "none", "aria-hidden": "true" },
+    h("path", { svg: true, d: p.d }), vals.length ? h("circle", { svg: true, cx: p.x, cy: p.y, r: 3 }) : null);
+}
+function trendTag(now, before) {
+  if (!(before > 0)) return null;
+  const pct = ((now - before) / before) * 100; if (!isFinite(pct)) return null;
+  return h("span", { class: "trend" + (pct < 0 ? " down" : "") }, (pct < 0 ? "↘ " : "↗ ") + Math.abs(pct).toFixed(pct > -10 && pct < 10 ? 1 : 0) + "%");
+}
+function statCard({ ic, value, label, sub, vals, trend, gold, href }) {
+  return h(href ? "a" : "div", { class: "card st" + (gold ? " gold" : ""), href: href || null },
+    h("div", { class: "top" }, h("span", { class: "ico" }, icon(ic)), trend || null),
+    h("div", { class: "v" }, value), h("div", { class: "l" }, label), sub ? h("div", { class: "s" }, sub) : null,
+    vals ? spark(vals) : null);
+}
+function drawHome() {
+  const st = S(); const now = new Date(); const list = homeOrders();
+  const hour = +new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "numeric", hour12: false }).format(now);
+  const greet = hour < 5 ? "سهرانين" : hour < 12 ? "صباح الخير" : hour < 17 ? "نهارك سعيد" : "مساء الخير";
+  const reqs = st.homeReq || st.trReq && st.trReq.filter((r) => r.status === "pending") || null;
+  const wds = st.homeWd || st.trWd && st.trWd.filter((w) => w.status === "pending") || null;
+  const today = list ? homeSum(list, ordRange("today")) : null;
+  const yday = list ? homeSum(list, ordRange("yesterday")) : null;
+  const week = list ? homeSum(list, ordRange("week")) : null;
+  const month = list ? homeSum(list, ordRange("month")) : null;
+  const pendOrders = list ? list.filter((o) => o.status === "pending").length : 0;
+  const waiting = (reqs ? reqs.length : 0) + (wds ? wds.length : 0) + pendOrders;
+  const dateText = new Intl.DateTimeFormat("ar-IQ-u-nu-latn", { timeZone: TZ, weekday: "long", day: "numeric", month: "long" }).format(now);
+  const sk = (w) => h("span", { class: "sk", style: `height:${w}px;width:70%` });
+
+  // 14 يوم ربح (للرسم الصغير) ومقارنة ويا اليوم اللي قبله
+  const days14 = []; const t0 = startOfDay(now).getTime();
+  for (let i = 13; i >= 0; i--) days14.push(list ? homeSum(list, [t0 - i * 864e5, t0 - (i - 1) * 864e5]).profit : 0);
+  const orders14 = []; for (let i = 13; i >= 0; i--) orders14.push(list ? homeSum(list, [t0 - i * 864e5, t0 - (i - 1) * 864e5]).n : 0);
+
+  const hello = h("div", { class: "hello" },
+    h("div", {}, h("h2", {}, `${greet}، ${SERVERS[store.server].name}`),
+      h("p", {}, `${dateText} · ` + (list && reqs && wds ? (waiting ? `${fmt(waiting)} شغلات تنتظرك` : "ماكو شي ينتظرك 🤍") : "يحمّل..."))),
+    h("div", { class: "acts" },
+      h("a", { class: "btn", href: `#/${store.server}/bot-transfers` }, icon("wallet"), "التحويلات"),
+      h("button", { class: "btn primary", type: "button", onclick: () => { const u = ordUi(); u.tab = "list"; u.add = { status: "delivered", section: (ordSettings().sections[0] || {}).id || "", currency: (ordSettings().currencies[0] || {}).key || "" }; go(store.server, "orders"); } }, icon("plus"), "طلب جديد")));
+
+  // البطاقة الصفرة: ربح الشهر ونسبة الطلبات اللي تسلمت
+  const done = month ? month.n : 0; const all = month ? month.n + month.pending : 0;
+  const pct = all ? Math.round((done / all) * 100) : 0;
+  const R = 70, C = 2 * Math.PI * R;
+  const ring = h("div", { class: "ring", role: "img", "aria-label": `${pct}% من طلبات الشهر تسلمت` },
+    h("svg", { viewBox: "0 0 168 168" },
+      h("circle", { svg: true, cx: 84, cy: 84, r: R, fill: "none", stroke: "rgba(0,0,0,.14)", "stroke-width": 12 }),
+      h("circle", { svg: true, cx: 84, cy: 84, r: R, fill: "none", stroke: "#111108", "stroke-width": 12, "stroke-linecap": "round",
+        "stroke-dasharray": `${(C * pct) / 100} ${C}` })),
+    h("div", { class: "c" }, h("b", { class: "num" }, `${pct}%`), h("span", {}, "تسلّم من طلبات الشهر")));
+  const hero = h("section", { class: "hero", "aria-label": "ملخص الشهر" },
+    h("div", { style: "position:relative;z-index:1;min-width:0" },
+      h("span", { class: "pill" }, h("i"), `${fmt(month ? month.n : 0)} طلب مسلّم هذا الشهر`),
+      h("h3", {}, month && month.profit > 0 ? ["متجرك ", h("em", {}, "ماشي"), " زين هذا الشهر"] : ["يلا نبدي ", h("em", {}, "الشهر"), " بقوة"]),
+      h("p", { class: "lead-text" }, month ? ["ربح الشهر لحد هسه ", h("b", { class: "num" }, `$${money2(month.profit)}`), " من مبيعات ", h("span", { class: "num" }, `$${money2(month.sell)}`), "."] : "يحمّل أرقام الشهر..."),
+      h("div", { class: "mini" },
+        h("div", {}, h("b", { class: "num" }, list ? `$${money2(today.profit)}` : "…"), h("span", {}, "ربح اليوم")),
+        h("div", {}, h("b", { class: "num" }, list ? `$${money2(week.profit)}` : "…"), h("span", {}, "ربح الأسبوع")),
+        h("div", {}, h("b", { class: "num" }, list ? fmt(pendOrders) : "…"), h("span", {}, "طلب معلق"))),
+      h("div", { class: "btns" },
+        h("a", { class: "btn", href: `#/${store.server}/orders` }, "عرض الأرباح", icon("arrow")),
+        h("a", { class: "btn out", href: `#/${store.server}/customers` }, icon("users"), "الزبائن"))),
+    ring);
+
+  // الأسبوع (يبدي السبت) ويا اللي ينتظرك
+  const wk = ordRange("week")[0]; const names = ["س", "ح", "ن", "ث", "ر", "خ", "ج"];
+  const dayCells = names.map((nm, i) => {
+    const a = wk + i * 864e5; const d = new Date(a + 12 * 3600e3); const sum = list ? homeSum(list, [a, a + 864e5]) : null;
+    const isToday = dayKey(d) === dayKey(now);
+    return h("div", { class: "day" + (isToday ? " today" : "") + (sum && sum.n ? " has" : ""), title: sum ? `${fmt(sum.n)} طلب · $${money2(sum.profit)}` : "" },
+      h("span", {}, nm), h("b", {}, new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "numeric" }).format(d)), h("i"));
+  });
+  const items = [];
+  for (const w of (wds || []).slice().sort((x, y) => (toDate(x.created_at) || 0) - (toDate(y.created_at) || 0)).slice(0, 3))
+    items.push(h("a", { href: `#/${store.server}/bot-transfers`, onclick: () => { const u = trUi(); u.tab = "withdrawals"; u.wf = "pending"; } },
+      h("span", { class: "time" }, fmtTime(toDate(w.created_at))),
+      h("span", { class: "what" }, h("b", {}, `سحب #${w.num} — ${w.user_name || w.user_id || ""}`), h("span", {}, `${money2(w.out)} ${w.to_unit || w.to || ""}`)),
+      h("span", { class: "tagx" }, "سحب")));
+  for (const r of (reqs || []).slice().sort((x, y) => (toDate(x.created_at) || 0) - (toDate(y.created_at) || 0)).slice(0, 3 - Math.min(3, items.length) || 0))
+    items.push(h("a", { href: `#/${store.server}/bot-transfers`, onclick: () => { const u = trUi(); u.tab = "receipts"; u.rf = "pending"; } },
+      h("span", { class: "time" }, fmtTime(toDate(r.created_at))),
+      h("span", { class: "what" }, h("b", {}, `وصل #${r.num} — ${r.user_name || r.user_id || ""}`), h("span", {}, r.currency || "")),
+      h("span", { class: "tagx" }, "وصل")));
+  const weekCard = h("section", { class: "card week", "aria-label": "هذا الأسبوع" },
+    h("div", { class: "week-head" }, h("span", { class: "big" }, new Intl.DateTimeFormat("en-GB", { timeZone: TZ, day: "2-digit" }).format(now)),
+      h("div", { class: "t" }, h("b", {}, new Intl.DateTimeFormat("ar-IQ", { timeZone: TZ, weekday: "long" }).format(now)),
+        h("span", {}, new Intl.DateTimeFormat("ar-IQ-u-nu-latn", { timeZone: TZ, month: "long", year: "numeric" }).format(now) + (reqs && wds ? ` · ${fmt(reqs.length + wds.length)} تنتظر` : "")))),
+    h("div", { class: "days", role: "list", "aria-label": "أيام الأسبوع" }, dayCells),
+    h("div", { class: "todo" }, !(reqs && wds) ? [sk(56), sk(56)] : items.length ? items : h("div", { class: "none" }, "ماكو وصولات ولا سحوبات تنتظر ✨")));
+
+  // أربع بطاقات
+  const bots = BOT_KEYS.filter((b) => S().status[b] !== undefined);
+  const on = BOT_KEYS.filter((b) => { const x = S().status[b]; const hb = x && toDate(x.heartbeat); return hb && Date.now() - hb.getTime() < 25 * 60000; });
+  const g = st.guild || {};
+  const cards = h("div", { class: "stat4" },
+    statCard({ ic: "users", value: g.member_count ? fmt(g.member_count) : "…", label: "أعضاء السيرفر", sub: g.name || SERVERS[store.server].full, href: `#/${store.server}/customers` }),
+    statCard({ ic: "receipt", value: list ? fmt(month.n) : "…", label: "طلبات هذا الشهر", sub: list ? `اليوم ${fmt(today.n)} طلب` : "", vals: list ? orders14 : null,
+      trend: list ? trendTag(today.n, yday.n) : null, href: `#/${store.server}/orders` }),
+    statCard({ ic: "dollar", value: list ? `$${money2(today.profit)}` : "…", label: "ربح اليوم", sub: list ? `أمس $${money2(yday.profit)}` : "", vals: list ? days14 : null,
+      trend: list ? trendTag(today.profit, yday.profit) : null, gold: true, href: `#/${store.server}/orders` }),
+    statCard({ ic: "bot", value: bots.length ? `${on.length}/${BOT_KEYS.length}` : "…", label: "البوتات الشغالة",
+      sub: bots.length ? (on.length === BOT_KEYS.length ? "كلها شغالة" : `واكف: ${BOT_KEYS.filter((b) => !on.includes(b)).map((b) => BOT_LABELS[b]).join("، ")}`) : "" }));
+
+  return h("div", { class: "home" }, hello, h("div", { class: "home-top" }, hero, weekCard), cards);
+}
+const fmtTime = (d) => (d ? new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).format(d) : "");
+
 // ------------------------------------------------------------------ الزبائن
 function customerRoles() {
   const st = S(); const ids = (st.draft.main && st.base.main && st.base.main.CUSTOMER_ROLE_IDS) || null;
