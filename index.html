@@ -608,6 +608,27 @@ a.st:hover { transform: translateY(-3px); }
 .mh { display: grid; gap: 16px; }
 .mh-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .mh-head h2 { font-size: clamp(22px, 5.5vw, 30px); font-weight: 700; flex: 1; min-width: 180px; }
+.mh-lock { min-height: 60vh; display: grid; place-items: center; }
+.mh-lockcard { width: min(380px, 100%); padding: 28px 20px; display: grid; gap: 12px; text-align: center; justify-items: center; }
+.mh-lockcard .ico { width: 56px; height: 56px; border-radius: 50%; display: grid; place-items: center; background: var(--wash); color: var(--accent); }
+.mh-lockcard .ico svg { width: 26px; height: 26px; }
+.mh-lockcard h2 { font-size: 22px; font-weight: 700; } .mh-lockcard p { color: var(--muted); font-size: 14px; }
+.mh-lockcard .input, .mh-lockcard .btn { width: 100%; }
+.mh-lockbtn { width: 44px; min-height: 44px; padding: 0; justify-content: center; flex: none; }
+.mh-head h2 { min-width: 0 !important; }
+.mh-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 6px; scrollbar-width: none; }
+.mh-tabs::-webkit-scrollbar { display: none; }
+.mh-tab { flex: none; min-height: 42px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--border); background: var(--card); color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+.mh-tab svg { width: 16px; height: 16px; }
+.mh-tab.on { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+.mh-tab.add { border-style: dashed; color: var(--text); }
+.mh-sechead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mh-sechead h3 { flex: 1; min-width: 0; font-size: 18px; font-weight: 700; } .mh-sechead h3 span { color: var(--muted); font-weight: 500; font-size: 15px; }
+.mh-secs { padding: 16px; display: grid; gap: 10px; } .mh-secs h3 { font-size: 15px; font-weight: 600; }
+.mh-secs .row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid var(--border); }
+.mh-secs .row .nm { flex: 1; min-width: 0; display: grid; gap: 2px; } .mh-secs .row .nm span { color: var(--muted); font-size: 12px; }
+.mh-secs .btn { min-height: 38px; padding: 0 12px; font-size: 13px; }
+.mh-move { width: auto; min-height: 40px; font-size: 13px; padding: 0 10px; }
 .mh-live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
 .mh-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
 .mh-live.on i { background: var(--good); box-shadow: 0 0 0 4px rgba(34, 197, 94, .18); }
@@ -748,6 +769,7 @@ function h(tag, attrs, ...kids) {
 const s = (tag, attrs, ...kids) => h(tag, { ...attrs, svg: true }, ...kids);
 // أيقونات SVG بخط واحد (نفس السماكة والحجم بكل مكان)
 const ICONS = {
+  gear: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z",
   book: "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 21H20M8 7h8M8 11h5",
   menu: "M4 6h16M4 12h16M4 18h16",
   home: "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
@@ -2894,12 +2916,12 @@ async function mhApi(path, body, tryKey) {
 }
 async function mhPoll(now) {
   clearTimeout(mh.timer);
-  if (store.page !== "manhwa" || store.server !== "lucifer") { mh.timer = 0; return; }  // يسأل بس والصفحة مفتوحة
+  if (store.page !== "manhwa" || store.server !== "lucifer" || !mh.unlocked) { mh.timer = 0; return; }  // يسأل بس والصفحة مفتوحة
   const st = S();
   if (mhProxy() && mhConf().key && !document.hidden) {
     try {
       const d = await mhApi("/api/lib?v=" + (now ? 0 : mh.v));
-      if (!d.same) { st.mhSeries = (d.series || []).map((x) => ({ ...x })); st.mhState = d.state || {}; }
+      if (!d.same) { st.mhSeries = (d.series || []).map((x) => ({ ...x })); st.mhState = d.state || {}; st.mhSections = d.sections || null; }
       mh.v = d.v; mh.fails = 0; st.mhOnline = true; st.mhErr = "";
       if (!d.same && store.page === "manhwa") render();
     } catch (e) {
@@ -2917,13 +2939,13 @@ async function mhSet(sid, data, done, key) {
   catch (e) { toast(e.message, 4200); }
   if (key) { delete mh.busy[key]; render(); }
 }
-async function mhAdd() {
+async function mhAdd(sec) {
   const url = mh.url.trim();
   if (!/^https?:\/\/\S+\.\S+/i.test(url)) return toast("حط رابط صفحة المانهوا (يبدي بـ http)", 3600);
   mh.busy.add = true; render();
   try {
-    const d = await mhApi("/api/add", { url }); const had = mhGet(d.sid);
-    mh.url = ""; toast(had ? "هذي موجودة بالمكتبة. راح يفحص فصولها الجديدة" : "انضافت. البوت هسه يجيب الفصول ويبدي يترجم", 3600);
+    const d = await mhApi("/api/add", { url, sec: sec || mhTab() }); const had = mhGet(d.sid);
+    mh.url = ""; mh.showAdd = false; toast(had ? "هذي موجودة بالمكتبة. راح يفحص فصولها الجديدة" : "انضافت. البوت هسه يجيب الفصول ويبدي يترجم", 3600);
     await mhPoll(true);
   } catch (e) { toast(e.message, 4200); }
   delete mh.busy.add; render();
@@ -2935,43 +2957,115 @@ async function mhDelete(s) {
   catch (e) { toast(e.message, 4200); }
   delete mh.busy["del" + s.id]; render();
 }
+// ---- قفل القسم: كلمة سر كل ما تدخل صفحة المانهوا (محفوظة كبصمة SHA-256، مو كنص)
+const MH_PASS = "64269db2450ea0e7847922c818378496d7ea45e85dd9654e69eea345bb945e82";
+async function mhUnlock() {
+  const pass = (mh.pass || "").trim(); if (!pass) return;
+  if (!(window.crypto && crypto.subtle)) return toast("افتح الموقع من رابطه الأصلي (https)", 4200);
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pass));
+  const hex = [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
+  mh.pass = "";
+  if (hex !== MH_PASS) { toast("كلمة السر غلط", 3200); render(); return; }
+  mh.unlocked = true; mh.timer = 0; render();
+}
+function mhLockView() {
+  return h("div", { class: "mh mh-lock" },
+    h("div", { class: "card mh-lockcard" }, h("span", { class: "ico" }, icon("book")), h("h2", {}, "مكتبة المانهوا"),
+      h("p", {}, "اكتب كلمة السر حتى تدخل"),
+      h("input", { class: "input", type: "password", dir: "ltr", autocomplete: "current-password", "aria-label": "كلمة السر", "data-fk": "mh-pass", value: mh.pass || "",
+        oninput: (ev) => { mh.pass = ev.target.value; }, onkeydown: (ev) => { if (ev.key === "Enter") mhUnlock(); } }),
+      h("button", { class: "btn primary", type: "button", onclick: mhUnlock }, "دخول")));
+}
+
+// ---- الأقسام
+function mhSections() { const list = S().mhSections; return list && list.length ? list : [{ id: "s1", name: "القسم الأول" }]; }
+function mhTab() {
+  if (mh.tab === undefined) { try { mh.tab = localStorage.getItem("mh.tab") || "s1"; } catch { mh.tab = "s1"; } }
+  if (mh.tab !== "settings" && !mhSections().some((x) => x.id === mh.tab)) mh.tab = "s1";
+  return mh.tab;
+}
+function mhGo(tab) { mh.tab = tab; mh.showAdd = false; try { localStorage.setItem("mh.tab", tab); } catch {} render(); }
+async function mhSectionOp(body, done) {
+  try { const d = await mhApi("/api/sections", body); if (done) toast(done); await mhPoll(true); return d; }
+  catch (e) { toast(e.message, 4200); return null; }
+}
+async function mhNewSection() {
+  const name = (prompt("اسم القسم الجديد:") || "").trim(); if (!name) return;
+  const d = await mhSectionOp({ op: "add", name }, `انسوى قسم «${name}»`);
+  if (d && d.id) mhGo(d.id);
+}
+function mhTabsBar(ready) {
+  const tab = mhTab();
+  const chip = (id, label, ic) => h("button", { type: "button", class: "mh-tab" + (tab === id ? " on" : ""), role: "tab", "aria-selected": tab === id ? "true" : "false", onclick: () => mhGo(id) }, ic ? icon(ic) : null, label);
+  return h("div", { class: "mh-tabs", role: "tablist", "aria-label": "أقسام المانهوا" },
+    mhSections().map((x) => chip(x.id, x.name)),
+    ready ? h("button", { type: "button", class: "mh-tab add", onclick: mhNewSection }, icon("plus"), "قسم جديد") : null,
+    chip("settings", "الإعدادات", "gear"));
+}
+
 function drawManhwa() {
+  if (!mh.unlocked) return mhLockView();
   const st = S();
   if (!mh.timer) { mh.timer = -1; mhPoll(true); }
   if (st.mhConf === undefined && !mhLocal().proxy && !st.error) return h("div", { class: "mh" }, h("span", { class: "sk", style: "height:44px;width:60%" }), h("span", { class: "sk", style: "height:150px" }));
-  if (!mhProxy()) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
-    h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "أول شي ضبّط الوسيط"), "المكتبة والصور توصل لموقعك عن طريق الوسيط (Cloudflare). ضبّطه من تحت.")), mhProxyCard());
-  if (!mhConf().key) mh.openConf = true;
-  if (!mhConf().key) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
-    h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "يحتاج مفتاح البوت"), "البوت يحطه هنا لحاله، بس إذا حد Firebase خالص ما يكدر. فحطه بنفسك من خانة «مفتاح البوت» تحت.")), mhProxyCard());
-  if (!st.mhSeries) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
-    st.mhOnline === false ? h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أوصل للبوت"), st.mhErr || "",
-      h("div", { style: "margin-top:6px" }, "تأكد إن البوت الأساسي شغال، وإنك لصقت كود الوسيط الجديد بـ Cloudflare وسويت Deploy."))) : h("span", { class: "sk", style: "height:150px" }), mhProxyCard());
-  const series = mhList(); const state = st.mhState || {};
-  const botOn = st.mhOnline !== false;
-  const cur = state.sid ? mhGet(state.sid) : null;
+  const ready = !!(mhProxy() && mhConf().key);
+  if (!ready && mh.tab !== "settings") mh.tab = "settings";
+  const state = st.mhState || {}; const botOn = st.mhOnline !== false;
   const head = h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا"),
-    h("span", { class: "mh-live" + (botOn && state.enabled !== false ? " on" : "") }, h("i"), !botOn ? "مو متصل" : state.enabled === false ? "الترجمة موقفة" : "متزامن"));
+    ready && st.mhSeries ? h("span", { class: "mh-live" + (botOn && state.enabled !== false ? " on" : "") }, h("i"), !botOn ? "مو متصل" : state.enabled === false ? "الترجمة موقفة" : "متزامن") : null,
+    h("button", { class: "btn mh-lockbtn", type: "button", "aria-label": "قفل المكتبة", title: "قفل", onclick: () => { mh.unlocked = false; mhClose(true); render(); } }, icon("lock")));
   const notes = [];
-  if (!botOn) notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أوصل للبوت الأساسي"), (st.mhErr ? st.mhErr + ". " : "") + "اللي تشوفه هنا آخر شي وصل، ويرجع يتحدث لحاله أول ما يرد.")));
-  else if (state.engine === "error") notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "محرك قراءة النص ما اشتغل"), state.note || "شوف أسطر [manhwa] بالـ Console مال البوت الأساسي.")));
+  if (ready && !botOn) notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أوصل للبوت الأساسي"),
+    (st.mhErr ? st.mhErr + ". " : "") + (st.mhSeries ? "اللي تشوفه هنا آخر شي وصل، ويرجع يتحدث لحاله أول ما يرد." : "تأكد إن البوت الأساسي شغال وإن كود الوسيط آخر نسخة."))));
+  else if (ready && state.engine === "error") notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "محرك قراءة النص ما اشتغل"), state.note || "شوف أسطر [manhwa] بالـ Console مال البوت الأساسي.")));
+  const tab = mhTab();
+  if (mh.shownTab !== tab) { mh.shownTab = tab; requestAnimationFrame(() => { const el = document.querySelector(".mh-tab.on"); if (el) el.scrollIntoView({ inline: "nearest", block: "nearest" }); }); }
+  const body = tab === "settings" ? mhSettingsView(ready) : !st.mhSeries ? h("span", { class: "sk", style: "height:160px" }) : mhSectionView(tab, state, botOn);
+  return h("div", { class: "mh" }, head, mhTabsBar(ready && !!st.mhSeries), notes, body);
+}
+
+function mhSettingsView(ready) {
+  const secs = mhSections();
+  const notice = !mhProxy() ? h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "أول شي ضبّط الوسيط"), "المكتبة والصور توصل لموقعك عن طريق الوسيط (Cloudflare)."))
+    : !mhConf().key ? h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "يحتاج مفتاح البوت"), "البوت يحطه هنا لحاله، بس إذا حد Firebase خالص ما يكدر. فحطه بنفسك من خانة «مفتاح البوت».")) : null;
+  if (!mhConf().key) mh.openConf = true;
+  const manage = ready && S().mhSeries ? h("section", { class: "card mh-secs", "aria-label": "الأقسام" }, h("h3", {}, "الأقسام"),
+    secs.map((x) => {
+      const n = (S().mhSeries || []).filter((m) => (m.sec || "s1") === x.id).length;
+      return h("div", { class: "row" }, h("div", { class: "nm" }, h("b", {}, x.name), h("span", {}, `${fmt(n)} مانهوا`)),
+        h("button", { class: "btn", type: "button", onclick: async () => { const name = (prompt("الاسم الجديد:", x.name) || "").trim(); if (name && name !== x.name) mhSectionOp({ op: "rename", id: x.id, name }, "تغير الاسم"); } }, "تسمية"),
+        x.id === "s1" ? null : h("button", { class: "btn danger", type: "button", onclick: () => { if (confirm(`تحذف قسم «${x.name}»؟ المانهوات اللي بيه تنتقل للقسم الأول.`)) mhSectionOp({ op: "delete", id: x.id }, "انحذف القسم"); } }, "حذف"));
+    }),
+    h("button", { class: "btn", type: "button", onclick: mhNewSection }, icon("plus"), "قسم جديد")) : null;
+  mh.openConf = mh.openConf || !ready;
+  return [notice, mhProxyCard(), manage];
+}
+
+function mhSectionView(sec, state, botOn) {
+  const series = mhList().filter((x) => (x.sec || "s1") === sec);
+  const secName = (mhSections().find((x) => x.id === sec) || {}).name || "";
+  const cur = state.sid ? mhGet(state.sid) : null;
   const now = botOn && (cur || state.note) ? h("div", { class: "card mh-now", role: "status" },
     h("b", {}, cur ? (state.num != null ? `تترجم هسه: ${cur.title || cur.url} — فصل ${mhNum(state.num)}` : `${cur.title || cur.url}`) : "الترجمة"),
     h("span", {}, state.note || "الترجمة ماشية بالخلفية حتى لو سكّرت الموقع")) : null;
-
+  const top = h("div", { class: "mh-sechead" }, h("h3", {}, secName, h("span", {}, ` (${fmt(series.length)})`)),
+    h("button", { class: "btn primary", type: "button", "aria-expanded": mh.showAdd ? "true" : "false", onclick: () => { mh.showAdd = !mh.showAdd; render(); if (mh.showAdd) requestAnimationFrame(() => { const el = document.querySelector("[data-fk=mh-url]"); if (el) el.focus(); }); } },
+      icon(mh.showAdd ? "x" : "plus"), mh.showAdd ? "إلغاء" : "إضافة مانهوا"));
+  const add = mh.showAdd ? h("div", { class: "card mh-add" },
+    h("div", { class: "line" },
+      h("input", { class: "input", type: "url", dir: "ltr", inputmode: "url", placeholder: "https://… رابط صفحة المانهوا", "aria-label": "رابط صفحة المانهوا", "data-fk": "mh-url", value: mh.url,
+        oninput: (ev) => { mh.url = ev.target.value; }, onkeydown: (ev) => { if (ev.key === "Enter") mhAdd(sec); } }),
+      h("button", { class: "btn primary", type: "button", disabled: !!mh.busy.add, onclick: () => mhAdd(sec) }, icon("plus"), mh.busy.add ? "يضيف..." : "ضيف")),
+    h("p", {}, `تنضاف لـ «${secName}». حط رابط الصفحة اللي بيها قائمة الفصول، والبوت يحسب الفصول ويترجمها كلها بالخلفية.`)) : null;
   const reading = series.filter((x) => x.last != null && (x.chapters || {})[mhKey(x.last)]);
   const cont = reading.length ? [h("div", { class: "mh-sec" }, "كمّل القراءة"),
     h("div", { class: "mh-cont" }, reading.map((x) => { const chs = mhChapters(x); return h("button", { type: "button", onclick: () => mhOpen(x.id, x.last) },
       h("b", {}, x.title || x.url), h("span", {}, `فصل ${mhNum(x.last)} من ${chs.length ? mhNum(chs[chs.length - 1].num) : "?"}`)); }))] : null;
+  return [top, add, now, cont, series.length ? series.map((x) => mhCard(x, state, botOn))
+    : emptyState("book", "هذا القسم فارغ", "اضغط «إضافة مانهوا» فوق وحط الرابط.")];
+}
 
-  const add = h("div", { class: "card mh-add" }, h("h3", {}, "ضيف مانهوا للمكتبة"),
-    h("div", { class: "line" },
-      h("input", { class: "input", type: "url", dir: "ltr", inputmode: "url", placeholder: "https://… رابط صفحة المانهوا", "aria-label": "رابط صفحة المانهوا", "data-fk": "mh-url", value: mh.url,
-        oninput: (ev) => { mh.url = ev.target.value; }, onkeydown: (ev) => { if (ev.key === "Enter") mhAdd(); } }),
-      h("button", { class: "btn primary", type: "button", disabled: !!mh.busy.add, onclick: mhAdd }, icon("plus"), mh.busy.add ? "يضيف..." : "ضيف")),
-    h("p", {}, "حط رابط الصفحة اللي بيها قائمة الفصول. البوت يحسب الفصول ويترجمها كلها من الأول للأخير بالخلفية، ويفحص الجديد تلقائياً."));
-
-  const cards = series.map((x) => {
+function mhCard(x, state, botOn) {
     const chs = mhChapters(x); const c = { d: 0, p: 0, f: 0, e: 0 }; chs.forEach((ch) => { c[ch.st || "p"]++; });
     const total = chs.length; const isNow = state.sid === x.id && botOn; const open = !!mh.open[x.id];
     const listing = !total && !x.list_err;
@@ -2982,6 +3076,7 @@ function drawManhwa() {
     const firstDone = chs.find((ch) => ch.st === "d");
     const btn = (label, ic, key, fn, cls) => h("button", { class: "btn " + (cls || ""), type: "button", disabled: !!mh.busy[key + x.id], onclick: fn }, ic ? icon(ic) : null, mh.busy[key + x.id] ? "لحظة..." : label);
     const ferr = chs.find((ch) => ch.st === "f" && ch.err);
+    const secs = mhSections();
     return h("section", { class: "card mh-s", "aria-label": x.title || x.url },
       h("div", { class: "t" }, h("h3", {}, h("a", { href: x.url, target: "_blank", rel: "noopener noreferrer" }, x.title || x.url)), tag),
       total ? h("div", { class: "mh-bar", role: "img", "aria-label": `${fmt(c.d)} من ${fmt(total)} فصل مترجم` }, h("i", { style: `width:${(c.d / total) * 100}%` }), h("i", { class: "f", style: `width:${(c.f / total) * 100}%` })) : null,
@@ -2999,6 +3094,8 @@ function drawManhwa() {
           : btn("إيقاف مؤقت", "stop", "tog", () => mhSet(x.id, { active: false }, "توقفت مؤقتاً", "tog")),
         c.f && x.active !== false ? btn("أعد الفاشلة", "refresh", "retry", () => mhSet(x.id, { retry_req: Date.now() }, "رجعت الفصول الفاشلة للدور", "retry")) : null,
         btn("افحص الفصول الجديدة", "refresh", "check", () => mhSet(x.id, { check_req: Date.now() }, "البوت يفحص هسه", "check")),
+        secs.length > 1 ? h("select", { class: "input mh-move", "aria-label": "انقلها لقسم", onchange: (ev) => { const to = ev.target.value; if (to) mhSet(x.id, { sec: to }, "انتقلت", "mv"); } },
+          h("option", { value: "" }, "انقلها لقسم…"), secs.filter((sx) => sx.id !== (x.sec || "s1")).map((sx) => h("option", { value: sx.id }, sx.name))) : null,
         btn("حذف", "trash", "del", () => mhDelete(x), "danger")),
       open ? [h("div", { class: "mh-chs", role: "list", "aria-label": "الفصول" }, chs.map((ch) => {
           const translating = isNow && state.num != null && +state.num === ch.num;
@@ -3007,10 +3104,6 @@ function drawManhwa() {
               : toast(translating ? "هذا الفصل يترجم هسه" : ch.st === "f" ? `فشل: ${ch.err || ""}` : ch.st === "e" ? "هذا الفصل ما بيه نص" : ch.tries ? `ينعاد بعد شوية (${ch.err || ""})` : "هذا الفصل بعده بالدور", 3600)) }, mhNum(ch.num));
         })),
         h("div", { class: "mh-legend" }, h("span", { class: "d" }, "مترجم"), h("span", { class: "l" }, "وين واصل"), h("span", {}, "بالدور"), h("span", { class: "f" }, "فشل"))] : null);
-  });
-  return h("div", { class: "mh" }, head, notes, now, cont, add, mhProxyCard(),
-    series.length ? [h("div", { class: "mh-sec" }, `المكتبة (${fmt(series.length)})`), cards]
-      : emptyState("book", "المكتبة فارغة", "ضيف أول مانهوا من الخانة فوق."));
 }
 
 // ---- وسيط الصور: مواقع المانهوا تمنع عرض صورها بمواقع ثانية، فالصور تمر من Cloudflare Worker مالتك
@@ -3042,7 +3135,7 @@ function mhProxyCard() {
     catch (e) { toast(e.message, 4600); }
     delete mh.busy.key; render();
   };
-  const open = !cur || !hasKey || mh.openConf; mh.openConf = false;
+  const open = !cur || !hasKey || mh.openConf || mh.tab === "settings"; mh.openConf = false;
   return h("details", { class: "card mh-proxy", open: open || null },
     h("summary", {}, icon("image"), "الوسيط (Cloudflare)", h("span", { class: "pst" + (cur ? " ok" : "") }, cur ? "شغال" : "مو مضبوط")),
     h("div", { class: "in" },
@@ -3181,6 +3274,7 @@ function mhFit(b) {
 // ------------------------------------------------------------------ التشغيل
 window.addEventListener("hashchange", () => {
   mhClose(true); clearTimeout(mh.timer); mh.timer = 0;
+  if (!/manhwa/.test(location.hash)) mh.unlocked = false;  // كل ما تدخل صفحة المانهوا تنطلب كلمة السر
   const before = store.server; readRoute(); remember(); closeDrawer();
   if (store.server !== before) watch();
   store.focusMain = true; render();
