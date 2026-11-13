@@ -656,6 +656,14 @@ body.mh-reading { overflow: hidden; }
 .mh-pg.fail::after { content: "الصورة ما فتحت"; position: absolute; top: 8px; left: 0; right: 0; text-align: center; color: #6b6b78; font-size: 12px; }
 .mh-b { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; direction: rtl; background: #fff; color: #111; border-radius: 42% / 38%; padding: 2px 4px; overflow: hidden; font: 600 14px/1.3 "Noto Sans Arabic", var(--font); overflow-wrap: anywhere; }
 .mh-b.box { border-radius: 6px; }
+.mh-proxy { padding: 0; } .mh-proxy summary { padding: 14px 16px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; gap: 8px; align-items: center; list-style: none; }
+.mh-proxy summary::-webkit-details-marker { display: none; }
+.mh-proxy summary .st { margin-inline-start: auto; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--raised); color: var(--muted); }
+.mh-proxy summary .st.ok { color: var(--good); background: rgba(34, 197, 94, .12); }
+.mh-proxy .in { padding: 0 16px 16px; display: grid; gap: 10px; }
+.mh-proxy ol { margin: 0; padding-inline-start: 20px; color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+.mh-proxy .line { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 640px) { .mh-proxy .line { grid-template-columns: minmax(0, 1fr) auto auto; } }
 .mh-msg { color: #d4d4d8; text-align: center; padding: 30vh 24px 0; font-size: 15px; display: grid; gap: 14px; justify-items: center; }
 .mh-end { color: #8e8e98; text-align: center; padding: 28px 16px 120px; font-size: 13px; }
 .mh-warn { position: sticky; top: 0; z-index: 2; background: rgba(20, 20, 22, .94); color: #e4e4e7; font-size: 13px; padding: 10px 14px; text-align: center; direction: rtl; }
@@ -910,6 +918,7 @@ function need(group) {
     const mhRender = () => { if (store.page === "manhwa") render(); };
     unsubs.push(onSnapshot(subcol("mh_series"), guard((q) => { st.mhSeries = q.docs.map((x) => ({ id: x.id, ...x.data() })); mhRender(); }), fail));
     unsubs.push(onSnapshot(sub("info", "mh_state"), guard((d) => { st.mhState = d.exists() ? d.data() : null; mhRender(); }), fail));
+    unsubs.push(onSnapshot(sub("info", "mh_conf"), guard((d) => { st.mhConf = d.exists() ? d.data() : {}; mhRender(); }), fail));
   } else if (group === "ord") {
     const ordRender = () => { if (store.page === "orders") render(); };
     unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
@@ -2974,9 +2983,71 @@ function drawManhwa() {
         })),
         h("div", { class: "mh-legend" }, h("span", { class: "d" }, "مترجم"), h("span", { class: "l" }, "وين واصل"), h("span", {}, "بالدور"), h("span", { class: "f" }, "فشل"))] : null);
   });
-  return h("div", { class: "mh" }, head, notes, now, cont, add,
+  return h("div", { class: "mh" }, head, notes, now, cont, add, mhProxyCard(),
     series.length ? [h("div", { class: "mh-sec" }, `المكتبة (${fmt(series.length)})`), cards]
       : emptyState("book", "المكتبة فارغة", "ضيف أول مانهوا من الخانة فوق."));
+}
+
+// ---- وسيط الصور: مواقع المانهوا تمنع عرض صورها بمواقع ثانية، فالصور تمر من Cloudflare Worker مالتك
+function mhProxy() { const p = ((S().mhConf || {}).proxy || "").trim().replace(/\/+$/, ""); return /^https:\/\/\S+$/.test(p) ? p : ""; }
+function mhProxyCard() {
+  const cur = mhProxy(); if (mh.proxy === undefined) mh.proxy = cur;
+  const save = async (value) => {
+    const v = value.trim().replace(/\/+$/, "");
+    if (v && !/^https:\/\/\S+\.\S+$/.test(v)) return toast("الرابط لازم يبدي بـ https://", 3600);
+    mh.busy.proxy = true; render();
+    try {
+      if (v) { const r = await fetch(v + "/ping", { cache: "no-store" }); if (!r.ok || (await r.text()).trim() !== "ok") throw new Error("ping"); }
+      await setDoc(sub("info", "mh_conf"), { proxy: v }, { merge: true });
+      mh.proxy = v; toast(v ? "اشتغل الوسيط وانحفظ. الصور هسه تمر منه" : "انشال الوسيط", 3600);
+    } catch (e) { toast(e && e.code ? explainError(e) : "الوسيط ما رد. تأكد إنك سويت Deploy ونسخت الرابط صح", 4600); }
+    delete mh.busy.proxy; render();
+  };
+  return h("details", { class: "card mh-proxy", open: !cur || null },
+    h("summary", {}, icon("image"), "وسيط الصور", h("span", { class: "st" + (cur ? " ok" : "") }, cur ? "شغال" : "مو مضبوط")),
+    h("div", { class: "in" },
+      h("p", { style: "color:var(--muted);font-size:13px" }, "أغلب مواقع المانهوا تمنع عرض صورها هنا. الوسيط يجيب الصورة بالنيابة عن المتصفح، مجاناً من Cloudflare."),
+      cur ? null : h("ol", {},
+        h("li", {}, "سوّي حساب مجاني بـ dash.cloudflare.com (ما يحتاج دومين)."),
+        h("li", {}, "Workers & Pages ← Create ← Create Worker ← Deploy."),
+        h("li", {}, "Edit code، امسح الموجود، والصق كود ملف image-proxy.js، وبعدها Deploy."),
+        h("li", {}, "انسخ رابط الـ Worker (ينتهي بـ workers.dev) والصقه هنا.")),
+      h("div", { class: "line" },
+        h("input", { class: "input", type: "url", dir: "ltr", inputmode: "url", placeholder: "https://….workers.dev", "aria-label": "رابط وسيط الصور", "data-fk": "mh-proxy", value: mh.proxy,
+          oninput: (ev) => { mh.proxy = ev.target.value; } }),
+        h("button", { class: "btn primary", type: "button", disabled: !!mh.busy.proxy, onclick: () => save(mh.proxy) }, mh.busy.proxy ? "يجرب..." : "جرّب واحفظ"),
+        cur ? h("button", { class: "btn danger", type: "button", disabled: !!mh.busy.proxy, onclick: () => { if (confirm("تشيل الوسيط؟")) save(""); } }, "شيله") : null)));
+}
+function mhDedupe(list) {
+  // أصوات مكررة (مثل «اضغط» خمس مرات فوق بعض): نخلي وحدة بس
+  const out = [];
+  for (const b of list || []) {
+    const clash = out.find((o) => o[4] === b[4] && Math.min(o[2], b[2]) > Math.max(o[0], b[0]) - 40 && Math.min(o[3], b[3]) > Math.max(o[1], b[1]) - 25);
+    if (!clash) out.push(b);
+  }
+  return out;
+}
+function mhColors(img, pg) {
+  // لون كل فقاعة من الصورة نفسها: الفقاعة البيضاء تاخذ أبيض والسودة أسود
+  try {
+    const W = 160, H = Math.max(1, Math.round((img.naturalHeight / img.naturalWidth) * W));
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const ctx = c.getContext("2d", { willReadFrequently: true }); ctx.drawImage(img, 0, 0, W, H);
+    const px = ctx.getImageData(0, 0, W, H).data;
+    for (const el of pg.querySelectorAll(".mh-b")) {
+      const [x1, y1, x2, y2] = el.dataset.box.split(",").map(Number);
+      const ax = Math.max(0, Math.floor((x1 / 1000) * W)), bx = Math.min(W, Math.ceil((x2 / 1000) * W));
+      const ay = Math.max(0, Math.floor((y1 / 1000) * H)), by = Math.min(H, Math.ceil((y2 / 1000) * H));
+      const count = new Map(); let best = null, n = 0;
+      for (let y = ay; y < by; y++) for (let x = ax; x < bx; x++) {
+        const i = (y * W + x) * 4; const k = ((px[i] >> 4) << 8) | ((px[i + 1] >> 4) << 4) | (px[i + 2] >> 4);
+        const v = (count.get(k) || 0) + 1; count.set(k, v); if (v > n) { n = v; best = k; }
+      }
+      if (best == null) continue;
+      const r = ((best >> 8) & 15) * 17, g = ((best >> 4) & 15) * 17, b = (best & 15) * 17;
+      el.style.background = `rgb(${r},${g},${b})`; el.style.color = 0.299 * r + 0.587 * g + 0.114 * b > 140 ? "#111" : "#fff";
+    }
+  } catch {}
 }
 
 // ---- القارئ: اضغط على الشاشة تظهر ثلاث أزرار (التالي، السابق، إخفاء الفصل)، واضغط مرة ثانية تختفي
@@ -3027,15 +3098,23 @@ async function mhLoad(r) {
   }
   if (mh.reader !== r) return;
   const chUrl = data.u || r.url;
-  const warn = h("div", { class: "mh-warn", hidden: true }, "بعض الصور موقعها الأصلي يمنع عرضها هنا. الترجمة تبقى بمكانها",
+  const warn = h("div", { class: "mh-warn", hidden: true }, mhProxy() ? "بعض الصور ما انجابت حتى من الوسيط (الموقع عنده حماية قوية). الترجمة تبقى بمكانها" : "بعض الصور موقعها الأصلي يمنع عرضها هنا. ضبّط «وسيط الصور» بصفحة المانهوا حتى تبين",
     chUrl ? ["، أو ", h("a", { href: chUrl, target: "_blank", rel: "noopener noreferrer" }, "افتح الفصل بموقعه"), "."] : ".");
   r.obs = new IntersectionObserver((list) => { for (const e of list) if (e.isIntersecting) e.target.querySelectorAll(".mh-b:not([data-fit])").forEach(mhFit); }, { root: r.el, rootMargin: "600px 0px" });
+  const proxy = mhProxy();
   const nodes = (data.p || []).map((p, i) => {
     const sized = p.W > 0 && p.H > 0;
-    const pg = h("div", { class: "mh-pg" + (sized ? " sized" : ""), style: sized ? `aspect-ratio:${p.W}/${p.H}` : null },
-      h("img", { src: p.s, alt: "", referrerpolicy: "no-referrer", decoding: "async", loading: i < 3 ? "eager" : "lazy",
-        onerror: () => { pg.classList.add("fail"); warn.removeAttribute("hidden"); } }),
-      (p.b || []).map((b) => h("div", { class: "mh-b", style: `left:${b[0] / 10}%;top:${b[1] / 10}%;width:${Math.max(0, b[2] - b[0]) / 10}%;height:${Math.max(0, b[3] - b[1]) / 10}%` }, b[4])));
+    const viaProxy = proxy ? `${proxy}/img?url=${encodeURIComponent(p.s)}&ref=${encodeURIComponent(chUrl || p.s)}` : "";
+    let pg;
+    const img = h("img", { alt: "", decoding: "async", loading: i < 3 ? "eager" : "lazy" });
+    if (viaProxy) { img.crossOrigin = "anonymous"; img.src = viaProxy; } else { img.referrerPolicy = "no-referrer"; img.src = p.s; }
+    img.addEventListener("load", () => { if (img.crossOrigin) mhColors(img, pg); });
+    img.addEventListener("error", () => {
+      if (img.crossOrigin) { img.removeAttribute("crossorigin"); img.referrerPolicy = "no-referrer"; img.src = p.s; return; }  // الوسيط ما جابها: نجرب مباشرة
+      pg.classList.add("fail"); warn.removeAttribute("hidden");
+    });
+    pg = h("div", { class: "mh-pg" + (sized ? " sized" : ""), style: sized ? `aspect-ratio:${p.W}/${p.H}` : null }, img,
+      mhDedupe(p.b).map((b) => h("div", { class: "mh-b", "data-box": b.slice(0, 4).join(","), style: `left:${b[0] / 10}%;top:${b[1] / 10}%;width:${Math.max(0, b[2] - b[0]) / 10}%;height:${Math.max(0, b[3] - b[1]) / 10}%` }, b[4])));
     r.obs.observe(pg); return pg;
   });
   if (!nodes.length) return mhFail(r, "هذا الفصل ما بيه صفحات");
