@@ -604,6 +604,68 @@ a.st:hover { transform: translateY(-3px); }
 .st.gold .trend { background: rgba(0, 0, 0, .12); color: #111108; }
 .bots-strip { display: flex; flex-wrap: wrap; gap: 8px; }
 .bots-strip span { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
+/* ================================================================== صفحة المانهوا + القارئ */
+.mh { display: grid; gap: 16px; }
+.mh-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.mh-head h2 { font-size: clamp(22px, 5.5vw, 30px); font-weight: 700; flex: 1; min-width: 180px; }
+.mh-live { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 6px 12px; border-radius: 999px; background: var(--card); border: 1px solid var(--border); color: var(--muted); }
+.mh-live i { width: 8px; height: 8px; border-radius: 50%; background: var(--bad); }
+.mh-live.on i { background: var(--good); box-shadow: 0 0 0 4px rgba(34, 197, 94, .18); }
+.mh-now { padding: 14px 16px; display: grid; gap: 4px; border-inline-start: 3px solid var(--accent); }
+.mh-now b { font-weight: 600; } .mh-now span { color: var(--muted); font-size: 13px; }
+.mh-add { padding: 16px; display: grid; gap: 10px; }
+.mh-add h3, .mh-sec { font-size: 15px; font-weight: 600; }
+.mh-add .line { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 640px) { .mh-add .line { grid-template-columns: minmax(0, 1fr) 150px auto; } }
+.mh-add p { color: var(--muted); font-size: 13px; }
+.mh-s { padding: 16px; display: grid; gap: 12px; }
+.mh-s .t { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mh-s .t h3 { font-size: 16px; font-weight: 600; flex: 1; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
+.mh-s .t a { color: inherit; text-decoration: none; } .mh-s .t a:hover { text-decoration: underline; }
+.mh-tag { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; background: var(--raised); color: var(--muted); white-space: nowrap; }
+.mh-tag.run { color: var(--on-primary); background: var(--primary); }
+.mh-tag.ok { color: var(--good); background: rgba(34, 197, 94, .12); }
+.mh-bar { height: 8px; border-radius: 8px; background: var(--raised); overflow: hidden; display: flex; direction: ltr; }
+.mh-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-3), var(--gold-1)); transition: width var(--slow); }
+.mh-bar i.f { background: var(--bad); }
+.mh-meta { color: var(--muted); font-size: 13px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.mh-meta .bad { color: var(--bad); }
+.mh-acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.mh-acts .btn { min-height: 40px; padding: 0 12px; font-size: 13px; }
+.mh-chs { display: grid; grid-template-columns: repeat(auto-fill, minmax(54px, 1fr)); gap: 6px; max-height: 320px; overflow-y: auto; padding: 2px; }
+.mh-ch { min-height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--raised); font-size: 13px; font-weight: 600; color: var(--faint); cursor: pointer; }
+.mh-ch.d { color: var(--text); border-color: rgba(230, 215, 36, .45); background: var(--wash); }
+.mh-ch.f { color: var(--bad); border-color: rgba(248, 113, 113, .4); }
+.mh-ch.now { animation: mhPulse 1.2s ease-in-out infinite; color: var(--accent); }
+.mh-ch.last { background: var(--primary); color: var(--on-primary); border-color: transparent; }
+@keyframes mhPulse { 50% { opacity: .45; } }
+.mh-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--muted); font-size: 12px; }
+.mh-legend span::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-inline-end: 6px; background: var(--raised); border: 1px solid var(--border); }
+.mh-legend .d::before { background: var(--wash); border-color: rgba(230, 215, 36, .6); } .mh-legend .l::before { background: var(--primary); border-color: transparent; } .mh-legend .f::before { border-color: var(--bad); }
+.mh-cont { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.mh-cont button { flex: none; width: min(260px, 78vw); text-align: start; padding: 14px; border-radius: var(--r-card); border: 1px solid rgba(230, 215, 36, .35); background: linear-gradient(150deg, rgba(230, 215, 36, .16), rgba(255, 255, 255, .04)); cursor: pointer; display: grid; gap: 4px; }
+.mh-cont b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .mh-cont span { color: var(--muted); font-size: 13px; }
+body.mh-reading { overflow: hidden; }
+.mh-reader { position: fixed; inset: 0; z-index: 200; background: #000; overflow-y: auto; overscroll-behavior: contain; -webkit-tap-highlight-color: transparent; }
+.mh-pages { max-width: 800px; margin: 0 auto; direction: ltr; min-height: 100%; }
+.mh-pg { position: relative; background: #0d0d0f; min-height: 40px; }
+.mh-pg img { display: block; width: 100%; height: auto; }
+.mh-pg.sized img { position: absolute; inset: 0; height: 100%; }
+.mh-pg.fail img { visibility: hidden; }
+.mh-pg.fail::after { content: "الصورة ما فتحت"; position: absolute; top: 8px; left: 0; right: 0; text-align: center; color: #6b6b78; font-size: 12px; }
+.mh-b { position: absolute; display: flex; align-items: center; justify-content: center; text-align: center; direction: rtl; background: #fff; color: #111; border-radius: 42% / 38%; padding: 2px 4px; overflow: hidden; font: 600 14px/1.3 "Noto Sans Arabic", var(--font); overflow-wrap: anywhere; }
+.mh-b.box { border-radius: 6px; }
+.mh-msg { color: #d4d4d8; text-align: center; padding: 30vh 24px 0; font-size: 15px; display: grid; gap: 14px; justify-items: center; }
+.mh-end { color: #8e8e98; text-align: center; padding: 28px 16px 120px; font-size: 13px; }
+.mh-warn { position: sticky; top: 0; z-index: 2; background: rgba(20, 20, 22, .94); color: #e4e4e7; font-size: 13px; padding: 10px 14px; text-align: center; direction: rtl; }
+.mh-warn a { color: var(--accent); }
+.mh-ctl { position: fixed; inset-inline: 0; bottom: 0; z-index: 201; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); display: grid; gap: 8px; background: linear-gradient(transparent, rgba(0, 0, 0, .88) 38%); transform: translateY(110%); transition: transform var(--slow) var(--ease-out); direction: rtl; }
+.mh-ctl.show { transform: none; }
+.mh-ctl .ttl { color: #e4e4e7; font-size: 13px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mh-ctl .b3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; max-width: 560px; width: 100%; margin: 0 auto; }
+.mh-ctl .btn { min-height: 48px; padding: 0 6px; font-size: 14px; background: rgba(40, 40, 46, .96); border-color: rgba(255, 255, 255, .16); }
+.mh-ctl .btn.primary { background: var(--primary); }
+@media (prefers-reduced-motion: reduce) { .mh-ctl { transition: none; } .mh-ch.now { animation: none; } }
 </style>
 </head>
 <body>
@@ -634,6 +696,7 @@ const PAGES = [
   { id: "home", title: "الرئيسية", icon: "home", only: "lucifer" },
   { id: "customers", title: "الزبائن", icon: "users" },
   { id: "orders", title: "الطلبات والأرباح", icon: "receipt", only: "lucifer" },
+  { id: "manhwa", title: "المانهوا", icon: "book", only: "lucifer" },
   { id: "bot-main", title: "البوت الأساسي", group: "التحكم بالبوت", bot: "main", icon: "bot" },
   { id: "bot-tickets", title: "بوت التكت", group: "التحكم بالبوت", bot: "tickets", icon: "ticket" },
   { id: "bot-broadcast", title: "بوت الإعلانات", group: "التحكم بالبوت", bot: "broadcast", icon: "megaphone", only: "lucifer" },
@@ -676,6 +739,7 @@ function h(tag, attrs, ...kids) {
 const s = (tag, attrs, ...kids) => h(tag, { ...attrs, svg: true }, ...kids);
 // أيقونات SVG بخط واحد (نفس السماكة والحجم بكل مكان)
 const ICONS = {
+  book: "M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 21H20M8 7h8M8 11h5",
   menu: "M4 6h16M4 12h16M4 18h16",
   home: "M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
   clock: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z",
@@ -817,7 +881,7 @@ function watch() {
 // البيانات الكبيرة (الطلبات، التحويلات، تاريخ الإعلانات) تنحمل بس لما تفتح صفحتها أول مرة -
 // قبل جانت تنحمل كلها ويا كل فتحة للموقع حتى لو ما فتحت صفحتها، وتصرف حد Firebase اليومي
 let lazyOn = {};
-const LAZY_PAGES = { "bot-broadcast": "bc", "bot-transfers": "tr", "orders": "ord", "home": "home" };
+const LAZY_PAGES = { "bot-broadcast": "bc", "bot-transfers": "tr", "orders": "ord", "home": "home", "manhwa": "mh" };
 function needFor(pageId) { const g = LAZY_PAGES[pageId]; if (g) need(g); }
 function need(group) {
   if (lazyOn[group] || store.server !== "lucifer") return;
@@ -840,6 +904,9 @@ function need(group) {
     unsubs.push(onSnapshot(query(subcol("orders"), where("created_at", ">=", Timestamp.fromDate(from))), guard((q) => { st.homeOrders = q.docs.map((x) => x.data()); homeRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_requests"), where("status", "==", "pending")), guard((q) => { st.homeReq = q.docs.map((x) => x.data()); homeRender(); }), fail));
     unsubs.push(onSnapshot(query(subcol("tr_withdrawals"), where("status", "==", "pending")), guard((q) => { st.homeWd = q.docs.map((x) => x.data()); homeRender(); }), fail));
+  } else if (group === "mh") {
+    // مستند واحد بس: حالة المكتبة. البوت الأساسي يحدثه لما شي يتغير بموقع المانهوا
+    unsubs.push(onSnapshot(sub("info", "manhwa"), guard((d) => { st.mh = d.exists() ? d.data() : null; mhOnDoc(st.mh); if (store.page === "manhwa") render(); }), fail));
   } else if (group === "ord") {
     const ordRender = () => { if (store.page === "orders") render(); };
     unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
@@ -1061,6 +1128,7 @@ function drawMain(page) {
   if (page.id === "home") body.push(drawHome());
   else if (page.id === "customers") body.push(drawCustomers());
   else if (page.id === "orders") body.push(drawOrders());
+  else if (page.id === "manhwa") body.push(drawManhwa());
   else if (page.id === "bot-broadcast") body.push(drawBroadcast());
   else if (page.id === "bot-transfers") body.push(drawTransfers());
   else if (page.id === "bot-chat") body.push(drawChat());
@@ -2794,8 +2862,206 @@ function trAuditCard() {
     stuck.length ? h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "طلبات عالقة"),
       h("ul", {}, stuck.map((x) => h("li", {}, `${x.kind === "wd" ? "طلب سحب" : "وصل"} #${x.num} بانتظار من ${fmt(Math.round(x.hours))} ساعة`))))) : null);
 }
+// ------------------------------------------------------------------ المانهوا (مكتبة + قارئ، متزامنة ويا موقع المانهوا)
+// الموقع ما يكلّم سيرفر المانهوا مباشرة (هذا https وذاك http). البوت الأساسي هو الجسر:
+// ينسخ المكتبة لـ info/manhwa، وينفذ الأزرار اللي تنكتب بـ actions، ويحط الفصل المطلوب بـ info/mch_...
+const mh = { url: "", style: "msa", open: {}, wait: {}, reader: null, cache: new Map() };
+const mhNum = (n) => String(n);
+const mhChKey = (sid, num) => `mch_${sid}_${mhNum(num).replace(".", "_")}`;
+function mhSeries(sid) { const d = S().mh; return d && (d.series || []).find((x) => x.id === sid) || null; }
+function mhBusy(key) { return Object.values(mh.wait).some((w) => w.key === key); }
+async function mhSend(op, extra, key, wait = 35000) {
+  const rid = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  mh.wait[rid] = { key: key || op, op, onFail: extra && extra.onFail };
+  const data = { ...extra }; delete data.onFail;
+  mh.wait[rid].timer = setTimeout(() => {
+    const w = mh.wait[rid]; if (!w) return; delete mh.wait[rid];
+    const text = "البوت الأساسي ما رد. تأكد إنه شغال بالاستضافة.";
+    if (w.onFail) w.onFail(text); else toast(text, 4200);
+    render();
+  }, wait);
+  render();
+  try { await addDoc(subcol("actions"), { bot: "main", name: "manhwa", op, rid, at: serverTimestamp(), by: store.user.email, ...data }); }
+  catch (e) { clearTimeout(mh.wait[rid].timer); const w = mh.wait[rid]; delete mh.wait[rid]; if (w.onFail) w.onFail(explainError(e)); else toast(explainError(e), 4200); render(); }
+  return rid;
+}
+function mhOnDoc(d) {
+  const r = d && d.result; if (!r || !mh.wait[r.rid]) return;
+  const w = mh.wait[r.rid]; clearTimeout(w.timer); delete mh.wait[r.rid];
+  if (!r.ok && w.onFail) w.onFail(r.text || "ما نجح الطلب");
+  else if (r.text) toast(r.text, r.ok ? 3000 : 4600);
+  if (r.ok && r.op === "add") mh.url = "";
+}
+function mhCounts(s) {
+  const c = { d: 0, p: 0, f: 0, e: 0 }; for (const ch of s.st || "") c[ch] = (c[ch] || 0) + 1;
+  return { ...c, total: (s.st || "").length };
+}
+function drawManhwa() {
+  const st = S(); const d = st.mh;
+  if (d === undefined) return h("div", { class: "mh" }, h("span", { class: "sk", style: "height:44px;width:60%" }), h("span", { class: "sk", style: "height:120px" }), h("span", { class: "sk", style: "height:160px" }));
+  if (d === null) return emptyState("book", "المكتبة بعدها ما وصلت", "ارفع ملف manhwa.py الجديد ويا main.py لمجلد البوت الأساسي وسوّي Restart، وبعدها المكتبة تظهر هنا تلقائياً.");
+  const series = (d.series || []).slice().sort((a, b) => (a.created || 0) - (b.created || 0));
+  const state = d.state || {}; const cur = state.sid ? series.find((x) => x.id === state.sid) : null;
+  const hb = st.status.main && toDate(st.status.main.heartbeat); const botOn = hb && Date.now() - hb.getTime() < 25 * 60000;
+  const live = d.online && botOn;
+  const head = h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا"),
+    h("span", { class: "mh-live" + (live ? " on" : "") }, h("i"), live ? "متزامن" : "مو متصل"),
+    d.site ? h("a", { class: "btn", href: d.site, target: "_blank", rel: "noopener noreferrer" }, icon("arrow"), "موقع المانهوا") : null);
+  const notes = [];
+  if (!botOn) notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "البوت الأساسي واكف"), "التزامن يمشي عن طريقه. اللي تشوفه هنا آخر حالة وصلت، والأزرار ما تشتغل لحد ما يرجع.")));
+  else if (!d.online) notes.push(h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "موقع المانهوا ما يرد"), d.error || "تأكد إنه شغال بالاستضافة.")));
+  if (d.online && d.pillow === false) notes.push(h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "مكتبة Pillow مو منصّبة"), "ارفع requirements.txt بمجلد manhwa وسوّي Restart حتى تشتغل ترجمة المانهوات الكاملة.")));
+  const now = cur ? h("div", { class: "card mh-now" }, h("b", {}, `تترجم هسه: ${cur.title} — فصل ${mhNum(state.num)}`), h("span", {}, state.note || "الترجمة ماشية بالخلفية حتى لو سكّرت الموقع")) : null;
+
+  // كمّل القراءة: آخر فصل قريته محفوظ بسيرفر المانهوا، فنفسه يطلع بكل جهاز وبالموقعين
+  const reading = series.filter((x) => x.last >= 0);
+  const cont = reading.length ? [h("div", { class: "mh-sec" }, "كمّل القراءة"),
+    h("div", { class: "mh-cont" }, reading.map((x) => h("button", { type: "button", onclick: () => mhOpen(x.id, x.last) },
+      h("b", {}, x.title), h("span", {}, `فصل ${mhNum(x.nums[x.last])} من ${mhNum(x.nums[x.nums.length - 1])}`))))] : null;
+
+  const adding = mhBusy("add");
+  const submit = () => {
+    const url = mh.url.trim();
+    if (!/^https?:\/\/\S+$/i.test(url)) return toast("حط رابط صفحة المانهوا (يبدي بـ http)", 3600);
+    mhSend("add", { url, style: mh.style }, "add", 100000);
+  };
+  const add = h("div", { class: "card mh-add" }, h("h3", {}, "ضيف مانهوا للمكتبة"),
+    h("div", { class: "line" },
+      h("input", { class: "input", type: "url", dir: "ltr", inputmode: "url", placeholder: "https://… رابط صفحة المانهوا", "aria-label": "رابط صفحة المانهوا", "data-fk": "mh-url", value: mh.url,
+        oninput: (ev) => { mh.url = ev.target.value; }, onkeydown: (ev) => { if (ev.key === "Enter") submit(); } }),
+      h("select", { class: "input", "aria-label": "نوع الترجمة", "data-fk": "mh-style", onchange: (ev) => { mh.style = ev.target.value; } },
+        h("option", { value: "msa", selected: mh.style === "msa" || null }, "عربي فصيح"), h("option", { value: "iq", selected: mh.style === "iq" || null }, "لهجة عراقية")),
+      h("button", { class: "btn primary", type: "button", disabled: adding || !live, onclick: submit }, icon("plus"), adding ? "يضيف..." : "ضيف")),
+    h("p", {}, "لازم رابط الصفحة اللي بيها قائمة الفصول. السيرفر يترجمها كلها بالخلفية من الأول للأخير، وتظهر هنا وبموقع المانهوا بنفس الوقت."));
+
+  const cards = series.map((x) => {
+    const c = mhCounts(x); const pct = c.total ? (c.d / c.total) * 100 : 0; const fpct = c.total ? (c.f / c.total) * 100 : 0;
+    const isNow = cur && cur.id === x.id; const open = !!mh.open[x.id];
+    const firstDone = (x.st || "").indexOf("d");
+    const tag = isNow ? h("span", { class: "mh-tag run" }, "تترجم هسه") : !x.active ? h("span", { class: "mh-tag" }, "موقفة")
+      : c.p ? h("span", { class: "mh-tag" }, "بالدور") : h("span", { class: "mh-tag ok" }, "مكتملة");
+    const act = (label, ic, op, extra, cls) => h("button", { class: "btn " + (cls || ""), type: "button", disabled: !live || mhBusy(op + x.id),
+      onclick: () => mhSend(op, { id: x.id, ...extra }, op + x.id, op === "check" ? 70000 : 35000) }, ic ? icon(ic) : null, mhBusy(op + x.id) ? "لحظة..." : label);
+    const chapters = open ? [h("div", { class: "mh-chs", role: "list", "aria-label": "الفصول" }, x.nums.map((num, i) => {
+        const s1 = x.st[i]; const translating = isNow && +state.num === +num;
+        return h("button", { type: "button", role: "listitem", class: "mh-ch " + s1 + (translating ? " now" : "") + (x.last === i ? " last" : ""),
+          "aria-label": `فصل ${mhNum(num)}`, onclick: () => (s1 === "d" ? mhOpen(x.id, i) : toast(translating ? "هذا الفصل يترجم هسه" : s1 === "f" ? "هذا الفصل فشل. اضغط «متابعة» حتى ينعاد." : s1 === "e" ? "هذا الفصل ما بيه نص" : "هذا الفصل بعده بالدور")) }, mhNum(num));
+      })),
+      h("div", { class: "mh-legend" }, h("span", { class: "d" }, "مترجم"), h("span", { class: "l" }, "وين واصل"), h("span", {}, "بالدور"), h("span", { class: "f" }, "فشل"))] : null;
+    return h("section", { class: "card mh-s", "aria-label": x.title },
+      h("div", { class: "t" }, h("h3", {}, h("a", { href: x.url, target: "_blank", rel: "noopener noreferrer" }, x.title)), tag),
+      h("div", { class: "mh-bar", role: "img", "aria-label": `${fmt(c.d)} من ${fmt(c.total)} فصل مترجم` }, h("i", { style: `width:${pct}%` }), h("i", { class: "f", style: `width:${fpct}%` })),
+      h("div", { class: "mh-meta" }, h("span", {}, `${fmt(c.d)} من ${fmt(c.total)} فصل مترجم`), c.p ? h("span", {}, `${fmt(c.p)} بالدور`) : null,
+        c.f ? h("span", { class: "bad" }, `${fmt(c.f)} فشل${x.err ? " (" + x.err + ")" : ""}`) : null,
+        x.last >= 0 ? h("span", {}, `واصل فصل ${mhNum(x.nums[x.last])}`) : null),
+      h("div", { class: "mh-acts" },
+        x.last >= 0 && x.st[x.last] === "d" ? h("button", { class: "btn primary", type: "button", onclick: () => mhOpen(x.id, x.last) }, `كمّل فصل ${mhNum(x.nums[x.last])}`)
+          : firstDone >= 0 ? h("button", { class: "btn primary", type: "button", onclick: () => mhOpen(x.id, firstDone) }, "ابدي القراءة") : null,
+        h("button", { class: "btn", type: "button", "aria-expanded": open ? "true" : "false", onclick: () => { mh.open[x.id] = !open; render(); } }, icon(open ? "up" : "down"), "الفصول"),
+        c.p && !isNow ? act("ترجمها هسه", null, "first") : null,
+        x.active ? act("إيقاف مؤقت", "stop", "toggle", { active: false }) : act("متابعة", null, "toggle", { active: true }),
+        act("افحص الفصول الجديدة", "refresh", "check"),
+        h("button", { class: "btn danger", type: "button", disabled: !live || mhBusy("delete" + x.id),
+          onclick: () => { if (confirm(`تحذف «${x.title}» من المكتبة ويا كل ترجمتها؟`)) mhSend("delete", { id: x.id }, "delete" + x.id); } }, icon("trash"), "حذف")),
+      chapters);
+  });
+  return h("div", { class: "mh" }, head, notes, now, cont, add,
+    series.length ? [h("div", { class: "mh-sec" }, `المكتبة (${fmt(series.length)})`), cards]
+      : emptyState("book", "المكتبة فارغة", "ضيف أول مانهوا من الخانة فوق."));
+}
+
+// ---- القارئ: اضغط على الشاشة تظهر ثلاث أزرار (التالي، السابق، إخفاء الفصل)، واضغط مرة ثانية تختفي
+function mhStep(s, idx, dir) { for (let i = idx + dir; i >= 0 && i < s.nums.length; i += dir) { if (s.st[i] !== "e") return i; } return -1; }
+function mhClose(silent) {
+  const r = mh.reader; if (!r) return;
+  mh.reader = null; if (r.unsub) r.unsub(); if (r.obs) r.obs.disconnect();
+  window.removeEventListener("keydown", r.onKey); window.removeEventListener("resize", r.onResize);
+  r.el.remove(); r.ctl.remove(); document.body.classList.remove("mh-reading");
+  if (!silent) render();
+}
+function mhOpen(sid, idx) {
+  const s = mhSeries(sid); if (!s) return;
+  if (s.st[idx] !== "d") return toast("هذا الفصل بعده ما مترجم");
+  const first = !mh.reader; mhClose(true);
+  const num = s.nums[idx];
+  const pages = h("div", { class: "mh-pages" }, h("div", { class: "mh-msg", dir: "rtl" }, "يحمّل الفصل..."));
+  const el = h("div", { class: "mh-reader", role: "dialog", "aria-modal": "true", "aria-label": `${s.title} فصل ${mhNum(num)}`, tabindex: -1 }, pages);
+  const go = (dir) => {
+    const cur = mhSeries(sid) || s; const to = mhStep(cur, idx, dir);
+    if (to < 0) return toast(dir > 0 ? "هذا آخر فصل" : "هذا أول فصل");
+    if (cur.st[to] !== "d") return toast(dir > 0 ? "الفصل التالي بعده ما مترجم" : "الفصل السابق مو مترجم");
+    mhOpen(sid, to);
+  };
+  const ctl = h("div", { class: "mh-ctl" },
+    h("div", { class: "ttl" }, `${s.title} · فصل ${mhNum(num)}`),
+    h("div", { class: "b3" },
+      h("button", { class: "btn primary", type: "button", onclick: () => go(1) }, "الفصل التالي"),
+      h("button", { class: "btn", type: "button", onclick: () => go(-1) }, "الفصل السابق"),
+      h("button", { class: "btn", type: "button", onclick: () => mhClose() }, "إخفاء الفصل")));
+  const r = { sid, idx, el, ctl, pages, fails: 0 };
+  el.addEventListener("click", (ev) => { if (ev.target.closest("a, button")) return; ctl.classList.toggle("show"); });
+  r.onKey = (ev) => { if (ev.key === "Escape") mhClose(); };
+  r.onResize = () => { clearTimeout(r.rt); r.rt = setTimeout(() => el.querySelectorAll(".mh-b").forEach(mhFit), 150); };
+  window.addEventListener("keydown", r.onKey); window.addEventListener("resize", r.onResize);
+  document.body.append(el, ctl); document.body.classList.add("mh-reading"); el.focus({ preventScroll: true });
+  mh.reader = r;
+  if (first) toast("اضغط على الشاشة تظهر الأزرار", 2600);
+  mhLoad(r, s, num);
+}
+function mhFail(r, text) {
+  if (mh.reader !== r) return;
+  r.pages.replaceChildren(h("div", { class: "mh-msg", dir: "rtl" }, text, h("button", { class: "btn", type: "button", onclick: () => mhClose() }, "رجوع للمكتبة")));
+}
+async function mhLoad(r, s, num) {
+  const key = mhChKey(r.sid, num); const srv = store.server;
+  let data = mh.cache.get(key);
+  if (!data) {
+    try { const snap = await getDoc(sub("info", key)); if (snap.exists()) data = JSON.parse(snap.data().data); } catch {}
+  }
+  if (mh.reader !== r || store.server !== srv) return;
+  if (data) {
+    mh.cache.set(key, data); mhShow(r, s, num, data);
+    mhSend("last", { id: r.sid, num, onFail: () => {} }, "last");  // بس يحفظ وين واصل (تزامن)
+    return;
+  }
+  // الفصل مو موجود بقاعدة البيانات بعد: نطلبه من البوت وننتظره يوصل
+  r.unsub = onSnapshot(sub("info", key), (snap) => {
+    if (mh.reader !== r || !snap.exists()) return;
+    try { const got = JSON.parse(snap.data().data); mh.cache.set(key, got); r.unsub(); r.unsub = null; mhShow(r, s, num, got); } catch { mhFail(r, "الفصل وصل بشكل غلط. جرّب مرة ثانية."); }
+  }, () => mhFail(r, "ماكدرت أجيب الفصل"));
+  mhSend("read", { id: r.sid, num, onFail: (text) => { if (r.pages.querySelector(".mh-pg")) return; mhFail(r, text); } }, "read");
+}
+function mhFit(b) {
+  const w = b.clientWidth, hgt = b.clientHeight; if (!w || !hgt) return;
+  const len = Math.max(1, b.textContent.length);
+  let size = Math.min(26, Math.max(7, Math.sqrt((w * hgt) / (len * 1.15))));
+  b.style.fontSize = size + "px";
+  for (let i = 0; i < 12 && size > 7 && (b.scrollHeight > hgt + 1 || b.scrollWidth > w + 1); i++) { size -= 1; b.style.fontSize = size + "px"; }
+  b.dataset.fit = "1";
+}
+function mhShow(r, s, num, data) {
+  if (mh.reader !== r) return;
+  const site = (S().mh || {}).site;
+  const warn = h("div", { class: "mh-warn", hidden: true }, "بعض الصور محمية من موقعها الأصلي وما تفتح هنا. الترجمة تبقى ظاهرة",
+    site ? ["، أو ", h("a", { href: site, target: "_blank", rel: "noopener noreferrer" }, "افتح الفصل بموقع المانهوا"), "."] : ".");
+  r.obs = new IntersectionObserver((list) => { for (const e of list) if (e.isIntersecting) e.target.querySelectorAll(".mh-b:not([data-fit])").forEach(mhFit); }, { root: r.el, rootMargin: "600px 0px" });
+  const nodes = (data.p || []).map((p, i) => {
+    const sized = p.W > 0 && p.H > 0;
+    const pg = h("div", { class: "mh-pg" + (sized ? " sized" : ""), style: sized ? `aspect-ratio:${p.W}/${p.H}` : null },
+      h("img", { src: p.s, alt: "", referrerpolicy: "no-referrer", decoding: "async", loading: i < 2 ? "eager" : "lazy",
+        onerror: () => { pg.classList.add("fail"); r.fails++; warn.removeAttribute("hidden"); } }),
+      (p.b || []).map((b) => h("div", { class: "mh-b" + (b[5] ? " box" : ""),
+        style: `left:${b[0] / 10}%;top:${b[1] / 10}%;width:${Math.max(0, b[2] - b[0]) / 10}%;height:${Math.max(0, b[3] - b[1]) / 10}%` }, b[4])));
+    r.obs.observe(pg); return pg;
+  });
+  if (!nodes.length) return mhFail(r, "هذا الفصل ما بيه صفحات");
+  const live = mhSeries(r.sid); if (live) live.last = r.idx;
+  r.pages.replaceChildren(warn, ...nodes, h("div", { class: "mh-end", dir: "rtl" }, `نهاية فصل ${mhNum(num)} · اضغط على الشاشة للفصل التالي`));
+  r.el.scrollTop = 0;
+}
 // ------------------------------------------------------------------ التشغيل
 window.addEventListener("hashchange", () => {
+  mhClose(true);
   const before = store.server; readRoute(); remember(); closeDrawer();
   if (store.server !== before) watch();
   store.focusMain = true; render();
