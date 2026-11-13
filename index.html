@@ -916,7 +916,7 @@ function need(group) {
   } else if (group === "mh") {
     // قسم المانهوا ما يستعمل Firebase: بس هذا المستند الصغير (رابط الوسيط + مفتاح البوت).
     // المكتبة نفسها تجي من البوت مباشرة عن طريق الوسيط (mhPoll)
-    unsubs.push(onSnapshot(sub("info", "mh_conf"), guard((d) => { st.mhConf = d.exists() ? d.data() : {}; mhPoll(true); if (store.page === "manhwa") render(); }), fail));
+    unsubs.push(onSnapshot(sub("info", "mh_conf"), guard((d) => { st.mhConf = d.exists() ? d.data() : {}; if (st.mhConf.key || st.mhConf.proxy) mhSaveLocal({ ...(st.mhConf.proxy ? { proxy: st.mhConf.proxy } : {}), ...(st.mhConf.key ? { key: st.mhConf.key } : {}) }); mhPoll(true); if (store.page === "manhwa") render(); }), fail));
   } else if (group === "ord") {
     const ordRender = () => { if (store.page === "orders") render(); };
     unsubs.push(onSnapshot(query(subcol("orders"), orderBy("num", "desc"), limit(5000)), guard((q) => { st.orders = q.docs.map((x) => x.data()); ordRender(); }), fail));
@@ -2882,29 +2882,30 @@ function mhList() { return (S().mhSeries || []).slice().sort((a, b) => (a.create
 function mhGet(sid) { return (S().mhSeries || []).find((x) => x.id === sid) || null; }
 function mhChapters(s) { return Object.entries((s && s.chapters) || {}).map(([k, c]) => ({ ...c, key: k, num: +c.num })).sort((a, b) => a.num - b.num); }
 // ---- الوصلة ويا البوت: موقعك ← الوسيط (https) ← البوت الأساسي على الاستضافة
-async function mhApi(path, body) {
-  const conf = S().mhConf || {}; const proxy = mhProxy();
+async function mhApi(path, body, tryKey) {
+  const conf = { ...mhConf() }; if (tryKey) conf.key = tryKey; const proxy = mhProxy();
   if (!proxy) throw new Error("ضبّط «الوسيط» أول");
   if (!conf.key) throw new Error("البوت الأساسي بعده ما عطى مفتاحه. سوّي له Restart مرة وحدة");
   const r = await fetch(proxy + path, body ? { method: "POST", headers: { "X-Key": conf.key, "Content-Type": "application/json" }, body: JSON.stringify(body) }
     : { headers: { "X-Key": conf.key }, cache: "no-store" });
   let data = null; try { data = await r.json(); } catch {}
-  if (!r.ok) throw new Error((data && data.error) || (r.status === 401 ? "المفتاح ما تطابق. سوّي Restart للبوت الأساسي" : "البوت الأساسي ما يرد"));
+  if (!r.ok) throw new Error(r.status === 401 ? "المفتاح غلط. انسخه كامل من ملف key.txt" : (data && data.error) || "البوت الأساسي ما يرد");
   return data;
 }
 async function mhPoll(now) {
   clearTimeout(mh.timer);
   if (store.page !== "manhwa" || store.server !== "lucifer") { mh.timer = 0; return; }  // يسأل بس والصفحة مفتوحة
   const st = S();
-  if (st.mhConf && mhProxy() && st.mhConf.key && !document.hidden) {
+  if (mhProxy() && mhConf().key && !document.hidden) {
     try {
       const d = await mhApi("/api/lib?v=" + (now ? 0 : mh.v));
       if (!d.same) { st.mhSeries = (d.series || []).map((x) => ({ ...x })); st.mhState = d.state || {}; }
       mh.v = d.v; mh.fails = 0; st.mhOnline = true; st.mhErr = "";
       if (!d.same && store.page === "manhwa") render();
     } catch (e) {
-      mh.fails++; st.mhErr = e.message;
-      if (st.mhOnline !== false || mh.fails === 1) { st.mhOnline = false; if (store.page === "manhwa") render(); }
+      // انقطاع لحظي (مثل نت الموبايل) ما يطلع تنبيه؛ بس إذا فشل 3 مرات ورا بعض
+      mh.fails++; st.mhErr = /load failed|failed to fetch|networkerror/i.test(e.message) ? "الاتصال بالوسيط انقطع" : e.message;
+      if (mh.fails >= 3 || !st.mhSeries) { st.mhOnline = false; if (store.page === "manhwa") render(); }
     }
   }
   mh.timer = setTimeout(() => mhPoll(false), mh.fails ? Math.min(30000, 5000 * mh.fails) : 5000);
@@ -2937,11 +2938,12 @@ async function mhDelete(s) {
 function drawManhwa() {
   const st = S();
   if (!mh.timer) { mh.timer = -1; mhPoll(true); }
-  if (st.mhConf === undefined) return h("div", { class: "mh" }, h("span", { class: "sk", style: "height:44px;width:60%" }), h("span", { class: "sk", style: "height:150px" }));
+  if (st.mhConf === undefined && !mhLocal().proxy && !st.error) return h("div", { class: "mh" }, h("span", { class: "sk", style: "height:44px;width:60%" }), h("span", { class: "sk", style: "height:150px" }));
   if (!mhProxy()) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
     h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "أول شي ضبّط الوسيط"), "المكتبة والصور توصل لموقعك عن طريق الوسيط (Cloudflare). ضبّطه من تحت.")), mhProxyCard());
-  if (!st.mhConf.key) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
-    h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "البوت الأساسي بعده ما ارتبط"), "ارفع manhwa.py الجديد وسوّي Restart للبوت الأساسي مرة وحدة. البوت يحط مفتاحه هنا لحاله.")), mhProxyCard());
+  if (!mhConf().key) mh.openConf = true;
+  if (!mhConf().key) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
+    h("div", { class: "notice" }, icon("alert"), h("div", {}, h("b", {}, "يحتاج مفتاح البوت"), "البوت يحطه هنا لحاله، بس إذا حد Firebase خالص ما يكدر. فحطه بنفسك من خانة «مفتاح البوت» تحت.")), mhProxyCard());
   if (!st.mhSeries) return h("div", { class: "mh" }, h("div", { class: "mh-head" }, h("h2", {}, "مكتبة المانهوا")),
     st.mhOnline === false ? h("div", { class: "notice bad", role: "alert" }, icon("alert"), h("div", {}, h("b", {}, "ماكدرت أوصل للبوت"), st.mhErr || "",
       h("div", { style: "margin-top:6px" }, "تأكد إن البوت الأساسي شغال، وإنك لصقت كود الوسيط الجديد بـ Cloudflare وسويت Deploy."))) : h("span", { class: "sk", style: "height:150px" }), mhProxyCard());
@@ -3012,21 +3014,36 @@ function drawManhwa() {
 }
 
 // ---- وسيط الصور: مواقع المانهوا تمنع عرض صورها بمواقع ثانية، فالصور تمر من Cloudflare Worker مالتك
-function mhProxy() { const p = ((S().mhConf || {}).proxy || "").trim().replace(/\/+$/, ""); return /^https:\/\/\S+$/.test(p) ? p : ""; }
+// الإعدادات تنحفظ بـ Firebase (لكل أجهزتك) وكمان بهذا المتصفح، حتى القسم يشتغل حتى لو حد Firebase خالص
+function mhLocal() { try { return JSON.parse(localStorage.getItem("mh.conf") || "{}") || {}; } catch { return {}; } }
+function mhSaveLocal(patch) { try { localStorage.setItem("mh.conf", JSON.stringify({ ...mhLocal(), ...patch })); } catch {} }
+function mhConf() { const f = S().mhConf || {}; const l = mhLocal(); return { proxy: f.proxy || l.proxy || "", key: l.key || f.key || "" }; }
+function mhProxy() { const p = (mhConf().proxy || "").trim().replace(/\/+$/, ""); return /^https:\/\/\S+$/.test(p) ? p : ""; }
 function mhProxyCard() {
   const cur = mhProxy(); if (mh.proxy === undefined) mh.proxy = cur;
+  const hasKey = !!mhConf().key; if (mh.key === undefined) mh.key = "";
   const save = async (value) => {
     const v = value.trim().replace(/\/+$/, "");
     if (v && !/^https:\/\/\S+\.\S+$/.test(v)) return toast("الرابط لازم يبدي بـ https://", 3600);
     mh.busy.proxy = true; render();
     try {
       if (v) { const r = await fetch(v + "/ping", { cache: "no-store" }); if (!r.ok || (await r.text()).trim() !== "ok") throw new Error("ping"); }
-      await setDoc(sub("info", "mh_conf"), { proxy: v }, { merge: true });
-      mh.proxy = v; toast(v ? "اشتغل الوسيط وانحفظ. الصور هسه تمر منه" : "انشال الوسيط", 3600);
-    } catch (e) { toast(e && e.code ? explainError(e) : "الوسيط ما رد. تأكد إنك سويت Deploy ونسخت الرابط صح", 4600); }
+      mhSaveLocal({ proxy: v });
+      setDoc(sub("info", "mh_conf"), { proxy: v }, { merge: true }).catch(() => {});  // لباقي أجهزتك، إذا Firebase يسمح
+      mh.proxy = v; toast(v ? "اشتغل الوسيط وانحفظ" : "انشال الوسيط", 3600); mhPoll(true);
+    } catch (e) { toast("الوسيط ما رد. تأكد إنك سويت Deploy ونسخت الرابط صح", 4600); }
     delete mh.busy.proxy; render();
   };
-  return h("details", { class: "card mh-proxy", open: !cur || null },
+  const saveKey = async () => {
+    const k = mh.key.trim();
+    if (k.length < 20) return toast("الصق المفتاح كامل من ملف key.txt", 3600);
+    mh.busy.key = true; render();
+    try { await mhApi("/api/lib?v=0", null, k); mhSaveLocal({ key: k }); toast("اشتغل. البوت تعرّف على المفتاح", 3200); mh.key = ""; mhPoll(true); }
+    catch (e) { toast(e.message, 4600); }
+    delete mh.busy.key; render();
+  };
+  const open = !cur || !hasKey || mh.openConf; mh.openConf = false;
+  return h("details", { class: "card mh-proxy", open: open || null },
     h("summary", {}, icon("image"), "الوسيط (Cloudflare)", h("span", { class: "pst" + (cur ? " ok" : "") }, cur ? "شغال" : "مو مضبوط")),
     h("div", { class: "in" },
       h("p", { style: "color:var(--muted);font-size:13px" }, "الوسيط يوصل موقعك بالبوت الأساسي، ويجيب صور الفصول اللي مواقعها تمنع عرضها هنا. مجاني من Cloudflare."),
@@ -3039,7 +3056,14 @@ function mhProxyCard() {
         h("input", { class: "input", type: "url", dir: "ltr", inputmode: "url", placeholder: "https://….workers.dev", "aria-label": "رابط وسيط الصور", "data-fk": "mh-proxy", value: mh.proxy,
           oninput: (ev) => { mh.proxy = ev.target.value; } }),
         h("button", { class: "btn primary", type: "button", disabled: !!mh.busy.proxy, onclick: () => save(mh.proxy) }, mh.busy.proxy ? "يجرب..." : "جرّب واحفظ"),
-        cur ? h("button", { class: "btn danger", type: "button", disabled: !!mh.busy.proxy, onclick: () => { if (confirm("تشيل الوسيط؟")) save(""); } }, "شيله") : null)));
+        cur ? h("button", { class: "btn danger", type: "button", disabled: !!mh.busy.proxy, onclick: () => { if (confirm("تشيل الوسيط؟")) save(""); } }, "شيله") : null),
+      cur ? [h("b", { style: "font-size:14px;margin-top:6px" }, "مفتاح البوت " + (hasKey ? "✓" : "")),
+        h("p", { style: "color:var(--muted);font-size:13px" }, hasKey ? "موجود. تحتاج تحطه مرة ثانية بس إذا انمسح ملف key.txt." :
+          "بلوحة الاستضافة: Files ← Main bot ← manhwa_data ← افتح key.txt وانسخ السطر اللي بيه كله، والصقه هنا. ينحفظ بهذا الجهاز."),
+        h("div", { class: "line" },
+          h("input", { class: "input", type: "text", dir: "ltr", autocomplete: "off", spellcheck: "false", placeholder: hasKey ? "••••••••" : "الصق المفتاح هنا", "aria-label": "مفتاح البوت", "data-fk": "mh-key", value: mh.key,
+            oninput: (ev) => { mh.key = ev.target.value; } }),
+          h("button", { class: hasKey ? "btn" : "btn primary", type: "button", disabled: !!mh.busy.key, onclick: saveKey }, mh.busy.key ? "يجرب..." : hasKey ? "بدّله" : "احفظ المفتاح"))] : null));
 }
 function mhDedupe(list) {
   // أصوات مكررة (مثل «اضغط» خمس مرات فوق بعض): نخلي وحدة بس
